@@ -62,7 +62,7 @@
   }
   /* When controls are placed between sections (group → bracket) */
   .bracket-controls {
-    max-width: 1400px;
+    max-width: 3840px;
     margin: 32px auto 8px;
   }
   .bracket-controls .controls { margin-top: 0; }
@@ -563,7 +563,7 @@
 
   /* PROGRESS */
   .progress-bar {
-    max-width: 1400px;
+    max-width: 3840px;
     margin: 14px auto 0;
     background: rgba(255,255,255,0.05);
     border-radius: 999px;
@@ -1446,7 +1446,7 @@ async function exportToPNG(mode) {
   }
   showToast('Gerando imagem…');
 
-  // The bracket needs at least ~1400px to render without clipping its R32 cards.
+  // The bracket needs at least ~3840px to render without clipping its R32 cards.
   // We make the snapshot container wider than that, with comfortable side padding.
   const SNAP_WIDTH = 1600;
   const snap = document.createElement('div');
