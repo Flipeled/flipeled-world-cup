@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA World Cup 2026 — Bracket Interativo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    /* Neutral palette: black / white / gray with gold accent */
+    --bg-deep:  #0a0a0a;
+    --bg-mid:   #141414;
+    --bg-light: #1f1f1f;
+    --surface:  rgba(255,255,255,0.04);
+    --surface-2: rgba(255,255,255,0.06);
+    --border:   rgba(255,255,255,0.10);
+    --border-2: rgba(255,255,255,0.18);
+    --accent-gold:  #f4c430;
+    --accent-gold-soft: rgba(244,196,48,0.18);
+    --text-light:  #f5f5f5;
+    --text-mid:    #c8c8c8;
+    --text-dim:    #8a8a8a;
+    --text-faint:  #5a5a5a;
+    --slot-empty:  rgba(255,255,255,0.03);
+    --slot-filled: rgba(255,255,255,0.06);
+  }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, #1a1a1a 0%, #0a0a0a 60%, #050505 100%);
+    color: var(--text-light);
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+    overflow-x: auto;
+  }
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: 3px;
+    color: var(--accent-gold);
+    line-height: 1;
+  }
+  .header .subtitle {
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-top: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  /* When controls are placed between sections (group → bracket) */
+  .bracket-controls {
+    max-width: 1400px;
+    margin: 32px auto 8px;
+  }
+  .bracket-controls .controls { margin-top: 0; }
+  .btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text-light);
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn:hover { background: rgba(255,255,255,0.16); transform: translateY(-1px); }
+  .btn.primary { background: var(--accent-gold); color: #0a0a0a; border-color: var(--accent-gold); }
+  .btn.primary:hover { background: #ffd84d; }
+
+  /* DROPDOWN */
+  .dropdown { position: relative; display: inline-block; }
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 200px;
+    background: #1a1a1a;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    display: none;
+    z-index: 200;
+  }
+  .dropdown.open .dropdown-menu { display: block; }
+  .dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text-light);
+    padding: 9px 12px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .dropdown-item:hover { background: rgba(244,196,48,0.15); color: var(--accent-gold); }
+
+  /* Export feedback */
+  .export-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    border: 1px solid var(--accent-gold);
+    color: var(--accent-gold);
+    padding: 12px 24px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 1000;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .export-toast.show { opacity: 1; }
+
+  /* INSTRUCTIONS */
+  .instructions {
+    max-width: 900px;
+    margin: 0 auto 24px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .instructions strong { color: var(--text-light); }
+
+  /* SECTION TITLES */
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    margin: 32px 0 16px;
+    padding-left: 12px;
+    border-left: 4px solid var(--accent-gold);
+    max-width: 3840px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* GROUPS GRID */
+  .groups-wrapper {
+    max-width: 3840px;
+    margin: 0 auto;
+  }
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .group-card {
+    background: linear-gradient(180deg, rgba(26,26,26,0.95) 0%, rgba(18,18,18,0.95) 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 14px;
+    backdrop-filter: blur(10px);
+  }
+  .group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .group-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--accent-gold);
+    letter-spacing: 2px;
+  }
+  .group-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .group-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .group-slot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--slot-empty);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    min-height: 42px;
+    transition: all 0.2s;
+  }
+  .group-slot.drag-over {
+    background: rgba(244, 196, 48, 0.15);
+    border-color: var(--accent-gold);
+    border-style: solid;
+  }
+  .group-slot.filled {
+    background: var(--slot-filled);
+    border-style: solid;
+    border-color: var(--border-2);
+  }
+  .slot-rank {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .slot-flag {
+    width: 28px;
+    height: 20px;
+    border-radius: 3px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .slot-flag.empty {
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.15);
+  }
+  .slot-name {
+    font-size: 12px;
+    font-weight: 600;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .slot-name.empty { color: var(--text-dim); font-weight: 400; font-style: italic; }
+  .slot-remove {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .group-slot.filled:hover .slot-remove { opacity: 1; }
+  .slot-remove:hover { color: #ff6b6b; background: rgba(255,107,107,0.1); }
+
+  /* Group slot variants */
+  /* All filled slots are draggable — show grab cursor */
+  .group-slot.filled { cursor: grab; }
+  .group-slot.filled:active { cursor: grabbing; }
+  .group-slot.filled.dragging { opacity: 0.4; }
+
+  /* Team placed in the knockout bracket — HIGHLIGHTED with gold accent */
+  .group-slot.used-in-r32 {
+    background: linear-gradient(90deg, rgba(244,196,48,0.18), rgba(244,196,48,0.06));
+    border-color: rgba(244,196,48,0.45);
+    box-shadow: inset 3px 0 0 var(--accent-gold);
+  }
+  .group-slot.used-in-r32 .slot-name {
+    color: var(--accent-gold);
+    font-weight: 700;
+  }
+  .group-slot.used-in-r32 .slot-rank {
+    color: var(--accent-gold);
+    background: rgba(244,196,48,0.15);
+  }
+
+  /* ==== EXPORT MODE OVERRIDES ====
+     html2canvas doesn't compose rgba() gradients, transparent backgrounds,
+     or backdrop-filter correctly. Inside .export-mode we replace every
+     transparent layer with a pre-mixed solid color so the output matches
+     the look of the live UI. */
+
+  /* Card containers — flatten the translucent dark layers */
+  .export-mode .group-card {
+    background: #161616 !important;
+    background-image: none !important;
+    border-color: rgb(36, 36, 36) !important;
+    backdrop-filter: none !important;
+  }
+  .export-mode .match {
+    background: #141414 !important;
+    background-image: none !important;
+    border-color: rgb(36, 36, 36) !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Highlighted state for export: solid brown fill + 1px gold border, nothing else */
+  .export-mode .group-slot.used-in-r32 {
+    background: #2b2719 !important;
+    background-image: none !important;
+    border: 1px solid #f4c430 !important;
+    box-shadow: none !important;
+  }
+  .export-mode .group-slot.used-in-r32 .slot-name {
+    color: #ffffff !important;
+  }
+  .export-mode .group-slot.used-in-r32 .slot-rank {
+    background: #2b2719 !important;
+    background-image: none !important;
+  }
+  .export-mode .match-slot.winner {
+    background: #2b2719 !important;
+    background-image: none !important;
+    border: 1px solid #f4c430 !important;
+    box-shadow: none !important;
+  }
+  .export-mode .match-slot.winner .match-name {
+    color: #ffffff !important;
+  }
+
+  /* KNOCKOUT BRACKET — proper vertical alignment using flex:1 wrappers */
+  .bracket-container {
+    max-width: 3840px;
+    margin: 0 auto; 
+    overflow-x: auto;
+    padding: 20px 0;
+  }
+  .bracket {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 1300px;
+    position: relative;
+  }
+  .bracket-side {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+  }
+  .bracket-side.right { flex-direction: row-reverse; }
+  .bracket-round {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 150px;
+  }
+  .round-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  /* Each match-wrapper takes equal vertical share — flex:1 — so its center aligns with feeding matches */
+  .match-wrapper {
+    flex: 1 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+    padding: 64px 0;
+    min-height: 70px;
+  }
+  .bracket-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 12px;
+    min-width: 200px;
+  }
+  .match {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    backdrop-filter: blur(6px);
+    width: 100%;
+  }
+  .match-wrapper { position: relative; }
+  .match-meta {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 2px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .match-slot {
+    display: flex;
+    align-items: center;
+    gap: px;
+    padding: 6px 8px;
+    background: var(--slot-empty);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-height: 34px;
+    border: 1px solid transparent;
+  }
+  /* R32 empty slots show they accept drops */
+  .match-slot.r32-slot.empty {
+    border: 1px dashed rgba(255,255,255,0.20);
+    background: rgba(255,255,255,0.03);
+    cursor: copy;
+  }
+  .match-slot.r32-slot.empty:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.35);
+  }
+  .match-slot.drag-target {
+    background: rgba(244,196,48,0.2) !important;
+    border-color: var(--accent-gold) !important;
+    border-style: solid !important;
+    transform: scale(1.02);
+  }
+  .match-slot.invalid-drop {
+    background: rgba(255, 107, 107, 0.25) !important;
+    border-color: #ff6b6b !important;
+    border-style: solid !important;
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .match-slot:hover:not(.empty) {
+    background: rgba(255,255,255,0.10);
+    border-color: var(--text-light);
+  }
+  .match-slot.empty:not(.r32-slot) {
+    cursor: default;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .match-slot.winner {
+    background: linear-gradient(90deg, rgba(244,196,48,0.25), rgba(244,196,48,0.1));
+    box-shadow: inset 3px 0 0 var(--accent-gold);
+    border-color: rgba(244,196,48,0.3);
+  }
+  /* Loser keeps its normal appearance; only the winner is highlighted. */
+  .match-flag {
+    width: 22px;
+    height: 16px;
+    border-radius: 2px;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .match-flag.empty {
+    background: rgba(255,255,255,0.05);
+    border: 1px dashed rgba(255,255,255,0.15);
+  }
+  .match-name {
+    font-size: 11px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+  .match-code {
+    font-size: 9px;
+    color: var(--text-dim);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  /* TROPHY / FINAL */
+  .trophy-zone {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .trophy-icon {
+    font-size: 64px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px rgba(244,196,48,0.6));
+  }
+  .final-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: var(--accent-gold);
+    margin-bottom: 4px;
+  }
+  .final-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    letter-spacing: 1px;
+  }
+  .final-match {
+    background: linear-gradient(135deg, rgba(244,196,48,0.15), rgba(244,196,48,0.05));
+    border: 1px solid var(--accent-gold);
+    border-radius: 12px;
+    padding: 10px;
+    width: 100%;
+    box-shadow: 0 0 30px rgba(244,196,48,0.2);
+  }
+  .champion-banner {
+    margin-top: 20px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, var(--accent-gold), #ff9500);
+    border-radius: 12px;
+    color: #0a0a0a;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    display: none;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 40px rgba(244,196,48,0.5);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .champion-banner.show { display: flex; }
+  .champion-banner .champ-flag {
+    width: 48px;
+    height: 32px;
+    border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 8px 40px rgba(244,196,48,0.5); }
+    50% { box-shadow: 0 8px 60px rgba(244,196,48,0.8); }
+  }
+
+  /* PROGRESS */
+  .progress-bar {
+    max-width: 1400px;
+    margin: 14px auto 0;
+    background: rgba(255,255,255,0.05);
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--text-light), var(--accent-gold));
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .bracket { min-width: 1100px; }
+    .groups-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>FIFA World Cup 2026</h1>
+  <div class="subtitle">Bracket Interativo — Canadá · México · EUA</div>
+</div>
+
+<div class="section-title">FASE DE GRUPOS</div>
+<div class="groups-wrapper">
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
+
+<div class="bracket-controls">
+  <div class="controls">
+    <button class="btn primary" id="autoR32Btn">🎲 Sortear 3º Colocados</button>
+    <button class="btn" id="resetBtn">↺ Resetar Chaveamento</button>
+    <div class="dropdown" id="exportDropdown">
+      <button class="btn" id="exportBtn">📷 Exportar PNG ▾</button>
+      <div class="dropdown-menu" id="exportMenu">
+        <button class="dropdown-item" data-export="groups">Apenas grupos</button>
+        <button class="dropdown-item" data-export="bracket">Apenas mata-mata</button>
+        <button class="dropdown-item" data-export="all">Grupos + mata-mata</button>
+      </div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="section-title">MATA-MATA</div>
+<div class="bracket-container">
+  <div class="bracket" id="bracket">
+    <!-- Left side -->
+    <div class="bracket-side left">
+      <div class="bracket-round" id="round32-left">
+        <div class="round-label">32-AVOS</div>
+      </div>
+      <div class="bracket-round" id="round16-left">
+        <div class="round-label">OITAVAS</div>
+      </div>
+      <div class="bracket-round" id="qf-left">
+        <div class="round-label">QUARTAS</div>
+      </div>
+      <div class="bracket-round" id="sf-left">
+        <div class="round-label">SEMIS</div>
+      </div>
+    </div>
+    <!-- Center / Final -->
+    <div class="bracket-center">
+      <div class="trophy-zone">
+        <div class="trophy-icon">🏆</div>
+        <div class="final-label">FINAL</div>
+        <div class="final-meta">19/07 · NY/NJ</div>
+        <div id="finalMatch"></div>
+        <div class="champion-banner" id="championBanner">
+          <div class="champ-flag" id="champFlag"></div>
+          <div>
+            <div style="font-size:11px;letter-spacing:1px;opacity:0.7">CAMPEÃ MUNDIAL</div>
+            <div id="champName">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Right side -->
+    <div class="bracket-side right">
+      <div class="bracket-round" id="round32-right">
+        <div class="round-label">32-AVOS</div>
+      </div>
+      <div class="bracket-round" id="round16-right">
+        <div class="round-label">OITAVAS</div>
+      </div>
+      <div class="bracket-round" id="qf-right">
+        <div class="round-label">QUARTAS</div>
+      </div>
+      <div class="bracket-round" id="sf-right">
+        <div class="round-label">SEMIS</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ============================================================
+// DATA — 48 teams across 12 groups (A-L), based on the bracket image
+// ============================================================
+const TEAMS = {
+  A: [
+    { code: 'MEX', name: 'México', flag: '🇲🇽', cc: 'mx' },
+    { code: 'KOR', name: 'Coreia do Sul', flag: '🇰🇷', cc: 'kr' },
+    { code: 'RSA', name: 'África do Sul', flag: '🇿🇦', cc: 'za' },
+    { code: 'CZE', name: 'Tchéquia', flag: '🇨🇿', cc: 'cz' }
+  ],
+  B: [
+    { code: 'SUI', name: 'Suíça', flag: '🇨🇭', cc: 'ch' },
+    { code: 'QAT', name: 'Catar', flag: '🇶🇦', cc: 'qa' },
+    { code: 'BIH', name: 'Bósnia', flag: '🇧🇦', cc: 'ba' },
+    { code: 'CAN', name: 'Canadá', flag: '🇨🇦', cc: 'ca' }
+  ],
+  C: [
+    { code: 'BRA', name: 'Brasil', flag: '🇧🇷', cc: 'br' },
+    { code: 'MAR', name: 'Marrocos', flag: '🇲🇦', cc: 'ma' },
+    { code: 'HAI', name: 'Haiti', flag: '🇭🇹', cc: 'ht' },
+    { code: 'SCO', name: 'Escócia', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', cc: 'gb-sct' }
+  ],
+  D: [
+    { code: 'TUR', name: 'Turquia', flag: '🇹🇷', cc: 'tr' },
+    { code: 'USA', name: 'EUA', flag: '🇺🇸', cc: 'us' },
+    { code: 'PAR', name: 'Paraguai', flag: '🇵🇾', cc: 'py' },
+    { code: 'AUS', name: 'Austrália', flag: '🇦🇺', cc: 'au' }
+  ],
+  E: [
+    { code: 'GER', name: 'Alemanha', flag: '🇩🇪', cc: 'de' },
+    { code: 'ECU', name: 'Equador', flag: '🇪🇨', cc: 'ec' },
+    { code: 'CIV', name: 'Costa do Marfim', flag: '🇨🇮', cc: 'ci' },
+    { code: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', cc: 'cv' }
+  ],
+  F: [
+    { code: 'JPN', name: 'Japão', flag: '🇯🇵', cc: 'jp' },
+    { code: 'NED', name: 'Holanda', flag: '🇳🇱', cc: 'nl' },
+    { code: 'TUN', name: 'Tunísia', flag: '🇹🇳', cc: 'tn' },
+    { code: 'SWE', name: 'Suécia', flag: '🇸🇪', cc: 'se' }
+  ],
+  G: [
+    { code: 'BEL', name: 'Bélgica', flag: '🇧🇪', cc: 'be' },
+    { code: 'EGY', name: 'Egito', flag: '🇪🇬', cc: 'eg' },
+    { code: 'NGA', name: 'Nigéria', flag: '🇳🇬', cc: 'ng' },
+    { code: 'NZL', name: 'Nova Zelândia', flag: '🇳🇿', cc: 'nz' }
+  ],
+  H: [
+    { code: 'ESP', name: 'Espanha', flag: '🇪🇸', cc: 'es' },
+    { code: 'URU', name: 'Uruguai', flag: '🇺🇾', cc: 'uy' },
+    { code: 'IRN', name: 'Irã', flag: '🇮🇷', cc: 'ir' },
+    { code: 'CPV2', name: 'Cabo Verde', flag: '🇨🇻', cc: 'cv' }
+  ],
+  I: [
+    { code: 'FRA', name: 'França', flag: '🇫🇷', cc: 'fr' },
+    { code: 'NOR', name: 'Noruega', flag: '🇳🇴', cc: 'no' },
+    { code: 'SEN', name: 'Senegal', flag: '🇸🇳', cc: 'sn' },
+    { code: 'IRQ', name: 'Iraque', flag: '🇮🇶', cc: 'iq' }
+  ],
+  J: [
+    { code: 'ARG', name: 'Argentina', flag: '🇦🇷', cc: 'ar' },
+    { code: 'ALG', name: 'Argélia', flag: '🇩🇿', cc: 'dz' },
+    { code: 'AUT', name: 'Áustria', flag: '🇦🇹', cc: 'at' },
+    { code: 'PLE', name: 'Palestina', flag: '🇵🇸', cc: 'ps' }
+  ],
+  K: [
+    { code: 'POR', name: 'Portugal', flag: '🇵🇹', cc: 'pt' },
+    { code: 'COL', name: 'Colômbia', flag: '🇨🇴', cc: 'co' },
+    { code: 'UZB', name: 'Uzbequistão', flag: '🇺🇿', cc: 'uz' },
+    { code: 'COD', name: 'R.D. Congo', flag: '🇨🇩', cc: 'cd' }
+  ],
+  L: [
+    { code: 'ENG', name: 'Inglaterra', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', cc: 'gb-eng' },
+    { code: 'CRO', name: 'Croácia', flag: '🇭🇷', cc: 'hr' },
+    { code: 'GHA', name: 'Gana', flag: '🇬🇭', cc: 'gh' },
+    { code: 'PAN', name: 'Panamá', flag: '🇵🇦', cc: 'pa' }
+  ]
+};
+
+// Flatten teams with unique IDs
+const ALL_TEAMS = [];
+Object.keys(TEAMS).forEach(g => {
+  TEAMS[g].forEach((t, i) => {
+    ALL_TEAMS.push({ ...t, id: `${g}_${i}`, group: g });
+  });
+});
+
+// ============================================================
+// KNOCKOUT STRUCTURE — based on the image
+// Round of 32 matchups: 16 matches
+// Format: { id, date, city, slotA: { type:'group', group, rank }, slotB: { type:'group3rd', groups } }
+// ============================================================
+const R32_LEFT = [
+  { id: 'L1', date: '06/29', city: 'Boston', a: { type:'group', group:'E', rank:1 }, b: { type:'g3', groups:['A','B','C','D','F'] } },
+  { id: 'L2', date: '06/30', city: 'NY',     a: { type:'group', group:'I', rank:1 }, b: { type:'g3', groups:['C','D','F','G','H'] } },
+  { id: 'L3', date: '06/28', city: 'LA',     a: { type:'group', group:'A', rank:2 }, b: { type:'group', group:'B', rank:2 } },
+  { id: 'L4', date: '06/29', city: 'Mty',    a: { type:'group', group:'F', rank:1 }, b: { type:'group', group:'C', rank:2 } },
+  { id: 'L5', date: '07/02', city: 'Toronto',a: { type:'group', group:'K', rank:2 }, b: { type:'group', group:'L', rank:2 } },
+  { id: 'L6', date: '07/02', city: 'LA',     a: { type:'group', group:'H', rank:1 }, b: { type:'group', group:'J', rank:2 } },
+  { id: 'L7', date: '07/03', city: 'SF Bay', a: { type:'group', group:'D', rank:1 }, b: { type:'g3', groups:['B','E','F','I','J'] } },
+  { id: 'L8', date: '07/01', city: 'Seattle',a: { type:'group', group:'G', rank:1 }, b: { type:'g3', groups:['A','E','H','I','J'] } }
+];
+const R32_RIGHT = [
+  { id: 'R1', date: '06/29', city: 'Houston', a: { type:'group', group:'C', rank:1 }, b: { type:'group', group:'F', rank:2 } },
+  { id: 'R2', date: '06/30', city: 'Dallas',  a: { type:'group', group:'E', rank:2 }, b: { type:'group', group:'I', rank:2 } },
+  { id: 'R3', date: '06/30', city: 'CDMX',    a: { type:'group', group:'A', rank:1 }, b: { type:'g3', groups:['G','E','F','H','I'] } },
+  { id: 'R4', date: '07/01', city: 'Atlanta', a: { type:'group', group:'L', rank:1 }, b: { type:'g3', groups:['E','H','I','J','K'] } },
+  { id: 'R5', date: '07/03', city: 'Miami',   a: { type:'group', group:'J', rank:1 }, b: { type:'group', group:'H', rank:2 } },
+  { id: 'R6', date: '07/03', city: 'Dallas',  a: { type:'group', group:'D', rank:2 }, b: { type:'group', group:'G', rank:2 } },
+  { id: 'R7', date: '07/02', city: 'Vancou.', a: { type:'group', group:'B', rank:1 }, b: { type:'g3', groups:['E','F','G','I','J'] } },
+  { id: 'R8', date: '07/02', city: 'Kansas',  a: { type:'group', group:'K', rank:1 }, b: { type:'g3', groups:['E','H','I','J','K'] } }
+];
+
+// Round of 16: pairs from R32
+const R16_LEFT = [
+  { id: 'L9',  date: '07/04', city: 'Philadel', from: ['L1','L2'] },
+  { id: 'L10', date: '07/04', city: 'Houston',  from: ['L3','L4'] },
+  { id: 'L11', date: '07/06', city: 'Dallas',   from: ['L5','L6'] },
+  { id: 'L12', date: '07/06', city: 'Seattle',  from: ['L7','L8'] }
+];
+const R16_RIGHT = [
+  { id: 'R9',  date: '07/05', city: 'NY',      from: ['R1','R2'] },
+  { id: 'R10', date: '07/05', city: 'CDMX',    from: ['R3','R4'] },
+  { id: 'R11', date: '07/07', city: 'Atlanta', from: ['R5','R6'] },
+  { id: 'R12', date: '07/07', city: 'Vancou.', from: ['R7','R8'] }
+];
+
+// Quarter Finals
+const QF_LEFT = [
+  { id: 'L13', date: '07/09', city: 'Boston', from: ['L9','L10'] },
+  { id: 'L14', date: '07/10', city: 'LA',     from: ['L11','L12'] }
+];
+const QF_RIGHT = [
+  { id: 'R13', date: '07/11', city: 'Miami',  from: ['R9','R10'] },
+  { id: 'R14', date: '07/11', city: 'Kansas', from: ['R11','R12'] }
+];
+
+// Semis
+const SF_LEFT  = [{ id: 'L15', date: '07/14', city: 'Dallas',  from: ['L13','L14'] }];
+const SF_RIGHT = [{ id: 'R15', date: '07/15', city: 'Atlanta', from: ['R13','R14'] }];
+
+// Final
+const FINAL = { id: 'F', date: '07/19', city: 'NY/NJ', from: ['L15','R15'] };
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  groups: {},          // { A: [team|null, team|null, ...4] }
+  matches: {}          // { matchId: { a: team|null, b: team|null, winner: 'a'|'b'|null } }
+};
+
+// Init empty groups
+Object.keys(TEAMS).forEach(g => { state.groups[g] = [null, null, null, null]; });
+
+// Init all matches
+[...R32_LEFT, ...R32_RIGHT, ...R16_LEFT, ...R16_RIGHT, ...QF_LEFT, ...QF_RIGHT, ...SF_LEFT, ...SF_RIGHT, FINAL].forEach(m => {
+  state.matches[m.id] = { a: null, b: null, winner: null };
+});
+
+// ============================================================
+// HELPERS — flag rendering using flagcdn.com (CC) with emoji fallback
+// ============================================================
+function flagBg(team) {
+  if (!team) return '';
+  // use flagcdn.com for crisp flags
+  return `background-image: url('https://flagcdn.com/w80/${team.cc}.png'), linear-gradient(135deg, #234, #123);`;
+}
+
+function teamMini(team) {
+  if (!team) return '<div class="match-flag empty"></div><div class="match-name" style="color:var(--text-dim);font-style:italic">—</div>';
+  return `<div class="match-flag" style="${flagBg(team)}"></div><div class="match-name">${team.name}</div>`;
+}
+
+// ============================================================
+// GROUPS
+// ============================================================
+function renderGroups() {
+  const grid = document.getElementById('groupsGrid');
+  grid.innerHTML = '';
+  const inR32 = getTeamsInR32();
+  Object.keys(TEAMS).forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    const slots = state.groups[g];
+    const rankLabels = ['1º', '2º', '3º', '4º'];
+    card.innerHTML = `
+      <div class="group-header">
+        <div class="group-name">GRUPO ${g}</div>
+        <div class="group-label">Classificação</div>
+      </div>
+      <div class="group-slots">
+        ${slots.map((team, i) => {
+          // All positions are draggable for reordering within/between groups.
+          // Only positions 0,1,2 (1º, 2º, 3º) qualify to be dropped on R32 slots.
+          const qualifies = i <= 2;
+          const isUsed = team && inR32.has(team.id);
+          const qualifiedCls = qualifies && team ? 'qualified' : '';
+          const usedCls = isUsed ? 'used-in-r32' : '';
+          // Every filled slot is draggable; the dragstart will tag it with the right source.
+          const draggableAttr = team ? `draggable="true" data-team-id="${team.id}" data-team-qualifies="${qualifies}"` : '';
+          return `
+          <div class="group-slot ${team ? 'filled' : ''} ${qualifiedCls} ${usedCls}" data-group="${g}" data-pos="${i}" ${draggableAttr}>
+            <div class="slot-rank">${rankLabels[i]}</div>
+            ${team ? `<div class="slot-flag" style="${flagBg(team)}"></div>
+                     <div class="slot-name">${team.name}</div>`
+                  : `<div class="slot-flag empty"></div>
+                     <div class="slot-name empty">—</div>`}
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Drag & drop handlers — for placing teams INTO groups (from flag pool OR from another group slot)
+  document.querySelectorAll('.group-slot').forEach(slot => {
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      slot.classList.add('drag-over');
+    });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+      const teamId = e.dataTransfer.getData('text/plain');
+      const team = ALL_TEAMS.find(t => t.id === teamId);
+      if (!team) return;
+      const g = slot.dataset.group;
+      const pos = parseInt(slot.dataset.pos);
+      // Whether dragged from flag pool or from another group slot, just place into target.
+      // If team was previously in R32 (placed manually), placeTeam below removes it from groups
+      // but R32 still holds an outdated reference — clean it up.
+      removeFromR32IfPresent(team.id);
+      placeTeam(team, g, pos);
+    });
+  });
+
+  // Drag handlers — for dragging ANY filled team between group positions.
+  // The `source` flag tells the R32 drop handler whether this team is allowed in the knockout slots.
+  document.querySelectorAll('.group-slot[data-team-id]').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      e.stopPropagation();
+      const teamId = el.dataset.teamId;
+      const qualifies = el.dataset.teamQualifies === 'true';
+      e.dataTransfer.setData('text/plain', teamId);
+      // 'knockout' = eligible for R32 drop; 'group-only' = can only swap with other group slots
+      e.dataTransfer.setData('source', qualifies ? 'knockout' : 'group-only');
+      e.dataTransfer.effectAllowed = 'move';
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+  });
+}
+
+function placeTeam(team, group, pos) {
+  // Find the team's current origin position. Since the pool was removed, every team
+  // is always somewhere in the groups — so origin is guaranteed.
+  let originGroup = null, originPos = null;
+  Object.keys(state.groups).forEach(g => {
+    state.groups[g].forEach((t, i) => {
+      if (t && t.id === team.id) { originGroup = g; originPos = i; }
+    });
+  });
+  if (originGroup === null) {
+    // Safety fallback (shouldn't happen)
+    state.groups[group][pos] = team;
+  } else if (originGroup === group && originPos === pos) {
+    // Dropped on itself — no-op
+    return;
+  } else {
+    // SWAP: whatever is at the destination goes to the origin
+    const existing = state.groups[group][pos];
+    state.groups[group][pos] = team;
+    state.groups[originGroup][originPos] = existing;
+  }
+  rebuildBracket();
+  renderAll();
+}
+
+// ============================================================
+// REBUILD BRACKET — populate R32 from current group standings
+// ============================================================
+function getGroupTeam(group, rank) {
+  // rank 1 = pos 0, rank 2 = pos 1, rank 3 = pos 2
+  return state.groups[group][rank - 1];
+}
+
+function getThirdPlace(groups) {
+  // For "best 3rd places" slots: we pick the first available 3rd-place team from listed groups
+  for (const g of groups) {
+    const t = state.groups[g][2]; // 3rd position
+    if (t) return t;
+  }
+  return null;
+}
+
+function rebuildBracket() {
+  // The fixed R32 slots (1st/2nd of each group) are now auto-filled from the current standings.
+  // The variable R32 slots (best 3rd-place) are only filled when the user clicks "Preencher Mata-mata"
+  // or drags a 3rd-place team into them manually.
+  const allR32 = [...R32_LEFT, ...R32_RIGHT];
+  // First, invalidate slots that no longer hold a valid team (e.g. after a swap)
+  allR32.forEach(m => {
+    ['a', 'b'].forEach(side => {
+      const currentTeam = state.matches[m.id][side];
+      if (currentTeam && !isValidForSlot(currentTeam, m[side])) {
+        state.matches[m.id][side] = null;
+        state.matches[m.id].winner = null;
+        propagateClearDownstream(m.id);
+      }
+    });
+  });
+  // Auto-fill the fixed (1st/2nd) slots from current group standings
+  fillFixedSlots();
+  // Re-propagate winners through later rounds (in case some are still valid)
+  allR32.forEach(m => {
+    if (state.matches[m.id].winner) propagateWinner(m.id);
+  });
+}
+
+// Check if a team currently satisfies a slot's qualification rule
+function isValidForSlot(team, slotSpec) {
+  if (!team || !slotSpec) return false;
+  if (slotSpec.type === 'group') {
+    // Must be in the specific rank of the specific group
+    return state.groups[slotSpec.group][slotSpec.rank - 1]?.id === team.id;
+  }
+  if (slotSpec.type === 'g3') {
+    // Must be a 3rd-place finisher in one of the listed groups
+    return slotSpec.groups.some(g => state.groups[g][2]?.id === team.id);
+  }
+  return false;
+}
+
+// Track which teams are placed in R32 (so we can show them as "used" in groups)
+function getTeamsInR32() {
+  const used = new Set();
+  [...R32_LEFT, ...R32_RIGHT].forEach(m => {
+    if (state.matches[m.id].a) used.add(state.matches[m.id].a.id);
+    if (state.matches[m.id].b) used.add(state.matches[m.id].b.id);
+  });
+  return used;
+}
+
+// Remove a team from any R32 slot it currently occupies (and clear winner if needed)
+function removeFromR32IfPresent(teamId) {
+  [...R32_LEFT, ...R32_RIGHT].forEach(m => {
+    ['a', 'b'].forEach(side => {
+      if (state.matches[m.id][side]?.id === teamId) {
+        state.matches[m.id][side] = null;
+        if (state.matches[m.id].winner === side) {
+          state.matches[m.id].winner = null;
+          propagateClearDownstream(m.id);
+        }
+      }
+    });
+  });
+}
+
+function propagateClearDownstream(matchId) {
+  // Find any match whose `from` includes matchId and clear that slot
+  const allLater = [...R16_LEFT, ...R16_RIGHT, ...QF_LEFT, ...QF_RIGHT, ...SF_LEFT, ...SF_RIGHT, FINAL];
+  allLater.forEach(m => {
+    if (m.from && m.from.includes(matchId)) {
+      const slot = m.from[0] === matchId ? 'a' : 'b';
+      if (state.matches[m.id][slot]) {
+        state.matches[m.id][slot] = null;
+        if (state.matches[m.id].winner) {
+          state.matches[m.id].winner = null;
+          propagateClearDownstream(m.id);
+        }
+      }
+    }
+  });
+}
+
+function propagateWinner(matchId) {
+  const match = state.matches[matchId];
+  const winnerTeam = match.winner === 'a' ? match.a : (match.winner === 'b' ? match.b : null);
+  if (!winnerTeam) return;
+
+  // Find next match
+  const allLater = [...R16_LEFT, ...R16_RIGHT, ...QF_LEFT, ...QF_RIGHT, ...SF_LEFT, ...SF_RIGHT, FINAL];
+  for (const m of allLater) {
+    if (m.from && m.from.includes(matchId)) {
+      const slot = m.from[0] === matchId ? 'a' : 'b';
+      state.matches[m.id][slot] = winnerTeam;
+      // If winner of this later match was set but the team changed, clear it
+      const lm = state.matches[m.id];
+      if (lm.winner === 'a' && (!lm.a || (slot==='a' && lm.a.id !== winnerTeam.id))) lm.winner = null;
+      if (lm.winner === 'b' && (!lm.b || (slot==='b' && lm.b.id !== winnerTeam.id))) lm.winner = null;
+      if (lm.winner) propagateWinner(m.id);
+      break;
+    }
+  }
+}
+
+// ============================================================
+// MATCH RENDERING
+// ============================================================
+function matchHTML(m) {
+  const data = state.matches[m.id];
+  const aTeam = data.a;
+  const bTeam = data.b;
+  const winner = data.winner;
+  const aCls = winner === 'a' ? 'winner' : (winner === 'b' ? 'loser' : '');
+  const bCls = winner === 'b' ? 'winner' : (winner === 'a' ? 'loser' : '');
+  const codeA = m.a && m.a.type === 'group' ? `${m.a.rank}${m.a.group}` : (m.a && m.a.type === 'g3' ? `3º` : '');
+  const codeB = m.b && m.b.type === 'group' ? `${m.b.rank}${m.b.group}` : (m.b && m.b.type === 'g3' ? `3º` : '');
+  const metaCity = m.city ? `${m.date} · ${m.city}` : '';
+  // R32 matches have m.a/m.b spec (drag targets). Later rounds use m.from (auto-fed).
+  const isR32 = !!(m.a && (m.a.type === 'group' || m.a.type === 'g3'));
+  const slotKind = isR32 ? 'r32-slot' : 'auto-slot';
+  // Placeholder labels for empty slots
+  const labelA = codeA ? (m.a.type === 'g3' ? `3º (${m.a.groups.join('')})` : codeA) : 'TBD';
+  const labelB = codeB ? (m.b.type === 'g3' ? `3º (${m.b.groups.join('')})` : codeB) : 'TBD';
+  return `
+    <div class="match" data-match="${m.id}">
+      ${metaCity ? `<div class="match-meta">${metaCity}</div>` : ''}
+      <div class="match-slot ${slotKind} ${aTeam ? 'filled-slot' : 'empty'} ${aCls}" data-match="${m.id}" data-slot="a" data-slot-side="${isR32 ? 'a' : ''}">
+        ${aTeam ? `<div class="match-flag" style="${flagBg(aTeam)}"></div>
+                   <div class="match-name">${aTeam.name}</div>
+                   ${codeA ? `<div class="match-code">${codeA}</div>` : ''}`
+                : `<div class="match-flag empty"></div>
+                   <div class="match-name">${labelA}</div>`}
+      </div>
+      <div class="match-slot ${slotKind} ${bTeam ? 'filled-slot' : 'empty'} ${bCls}" data-match="${m.id}" data-slot="b" data-slot-side="${isR32 ? 'b' : ''}">
+        ${bTeam ? `<div class="match-flag" style="${flagBg(bTeam)}"></div>
+                   <div class="match-name">${bTeam.name}</div>
+                   ${codeB ? `<div class="match-code">${codeB}</div>` : ''}`
+                : `<div class="match-flag empty"></div>
+                   <div class="match-name">${labelB}</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderBracket() {
+  // Helper to render into a round container.
+  // Each match is wrapped in .match-wrapper { flex: 1 } so that across all rounds
+  // the total vertical space is identical — which means a match in round N+1
+  // naturally lands between its two feeders in round N.
+  function renderRound(containerId, matches, label) {
+    const c = document.getElementById(containerId);
+    let html = `<div class="round-label">${label}</div>`;
+    matches.forEach(m => {
+      html += `<div class="match-wrapper">${matchHTML(m)}</div>`;
+    });
+    c.innerHTML = html;
+  }
+  renderRound('round32-left', R32_LEFT, '32-AVOS');
+  renderRound('round16-left', R16_LEFT, 'OITAVAS');
+  renderRound('qf-left', QF_LEFT, 'QUARTAS');
+  renderRound('sf-left', SF_LEFT, 'SEMI');
+  renderRound('round32-right', R32_RIGHT, '32-AVOS');
+  renderRound('round16-right', R16_RIGHT, 'OITAVAS');
+  renderRound('qf-right', QF_RIGHT, 'QUARTAS');
+  renderRound('sf-right', SF_RIGHT, 'SEMI');
+
+  // Final
+  const finalEl = document.getElementById('finalMatch');
+  const fData = state.matches[FINAL.id];
+  finalEl.innerHTML = `
+    <div class="final-match">
+      <div class="match-slot ${fData.a ? '' : 'empty'} ${fData.winner === 'a' ? 'winner' : (fData.winner === 'b' ? 'loser' : '')}" data-match="${FINAL.id}" data-slot="a">
+        ${fData.a ? `<div class="match-flag" style="${flagBg(fData.a)}"></div><div class="match-name">${fData.a.name}</div>`
+                 : `<div class="match-flag empty"></div><div class="match-name">Semi 1</div>`}
+      </div>
+      <div style="text-align:center; color:var(--accent-gold); font-family:'Bebas Neue'; font-size:14px; padding: 4px;">VS</div>
+      <div class="match-slot ${fData.b ? '' : 'empty'} ${fData.winner === 'b' ? 'winner' : (fData.winner === 'a' ? 'loser' : '')}" data-match="${FINAL.id}" data-slot="b">
+        ${fData.b ? `<div class="match-flag" style="${flagBg(fData.b)}"></div><div class="match-name">${fData.b.name}</div>`
+                 : `<div class="match-flag empty"></div><div class="match-name">Semi 2</div>`}
+      </div>
+    </div>
+  `;
+
+  // Click handlers (only for filled slots — pick winner)
+  document.querySelectorAll('.match-slot[data-match]').forEach(slot => {
+    slot.addEventListener('click', () => {
+      const matchId = slot.dataset.match;
+      const which = slot.dataset.slot;
+      const data = state.matches[matchId];
+      const team = which === 'a' ? data.a : data.b;
+      if (!team) return; // can't pick empty
+      // Toggle: if already winner, unset
+      if (data.winner === which) {
+        data.winner = null;
+        propagateClearDownstream(matchId);
+      } else {
+        data.winner = which;
+        propagateWinner(matchId);
+      }
+      renderBracket();
+      renderGroups(); // re-render groups so "used" badges update
+      renderChampion();
+      updateProgress();
+    });
+  });
+
+  // Drop handlers — only for R32 slots (accept qualified teams from groups)
+  document.querySelectorAll('.match-slot.r32-slot').forEach(slot => {
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      slot.classList.add('drag-target');
+    });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-target'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-target');
+      const teamId = e.dataTransfer.getData('text/plain');
+      const source = e.dataTransfer.getData('source');
+      if (source !== 'knockout') return; // only accept drags from group slots
+      const team = ALL_TEAMS.find(t => t.id === teamId);
+      if (!team) return;
+      const matchId = slot.dataset.match;
+      const side = slot.dataset.slotSide;
+      const matchDef = findR32MatchDef(matchId);
+      if (!matchDef) return;
+      const slotSpec = side === 'a' ? matchDef.a : matchDef.b;
+      // Validate: does this team satisfy the slot's qualification rule?
+      if (!isValidForSlot(team, slotSpec)) {
+        // Flash invalid feedback
+        slot.classList.add('invalid-drop');
+        setTimeout(() => slot.classList.remove('invalid-drop'), 600);
+        return;
+      }
+      // If this team is already placed in another R32 slot, remove it from there
+      [...R32_LEFT, ...R32_RIGHT].forEach(other => {
+        ['a', 'b'].forEach(s => {
+          if (state.matches[other.id][s]?.id === team.id) {
+            state.matches[other.id][s] = null;
+            if (state.matches[other.id].winner) {
+              state.matches[other.id].winner = null;
+              propagateClearDownstream(other.id);
+            }
+          }
+        });
+      });
+      // If this slot already had a team, drop it (clear winner if necessary)
+      if (state.matches[matchId][side]) {
+        if (state.matches[matchId].winner === side) {
+          state.matches[matchId].winner = null;
+          propagateClearDownstream(matchId);
+        }
+      }
+      state.matches[matchId][side] = team;
+      renderAll();
+    });
+  });
+}
+
+function findR32MatchDef(matchId) {
+  return [...R32_LEFT, ...R32_RIGHT].find(m => m.id === matchId);
+}
+
+// ============================================================
+// CHAMPION
+// ============================================================
+function renderChampion() {
+  const banner = document.getElementById('championBanner');
+  const fData = state.matches[FINAL.id];
+  if (fData.winner) {
+    const champ = fData.winner === 'a' ? fData.a : fData.b;
+    if (champ) {
+      banner.classList.add('show');
+      document.getElementById('champFlag').style = flagBg(champ);
+      document.getElementById('champName').textContent = champ.name;
+      return;
+    }
+  }
+  banner.classList.remove('show');
+}
+
+// ============================================================
+// PROGRESS
+// ============================================================
+function updateProgress() {
+  // 31 knockout matches total (R32:16, R16:8, QF:4, SF:2, Final:1)
+  const decisions = Object.values(state.matches).filter(m => m.winner).length;
+  const pct = Math.round((decisions / 31) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ============================================================
+// AUTO-FILL & RESET
+// ============================================================
+function autoFillGroups() {
+  // Use the group order from the image (group A: MEX 1st, RSA 2nd, KOR 3rd, CZE 4th, etc.)
+  Object.keys(TEAMS).forEach(g => {
+    TEAMS[g].forEach((t, i) => {
+      const team = ALL_TEAMS.find(x => x.id === `${g}_${i}`);
+      placeTeam(team, g, i);
+    });
+  });
+}
+
+// Place the 24 direct qualifiers (1st and 2nd of each group) into their fixed R32 slots.
+// This runs on startup and whenever the user reorders groups — those slots are deterministic.
+function fillFixedSlots() {
+  [...R32_LEFT, ...R32_RIGHT].forEach(m => {
+    ['a', 'b'].forEach(side => {
+      const spec = m[side];
+      if (spec.type === 'group') {
+        const team = getGroupTeam(spec.group, spec.rank);
+        // Only update if it's empty or holds a stale team; keep winners in sync via rebuildBracket
+        if (state.matches[m.id][side]?.id !== team?.id) {
+          state.matches[m.id][side] = team;
+          if (state.matches[m.id].winner === side) {
+            state.matches[m.id].winner = null;
+            propagateClearDownstream(m.id);
+          }
+        }
+      }
+    });
+  });
+}
+
+// Fill only the "best 3rd-place" R32 slots, choosing 8 of the 12 third-placed teams at random.
+// Each slot accepts only teams from certain groups, and a team can occupy at most one slot.
+// Uses backtracking to find a valid assignment.
+function autoFillR32() {
+  // 1) Make sure the fixed slots are already filled — defensive
+  fillFixedSlots();
+
+  // 2) Clear ALL existing g3 slots so we start fresh
+  const thirdSlots = [];
+  [...R32_LEFT, ...R32_RIGHT].forEach(m => {
+    if (m.b.type === 'g3') {
+      state.matches[m.id].b = null;
+      if (state.matches[m.id].winner === 'b') {
+        state.matches[m.id].winner = null;
+        propagateClearDownstream(m.id);
+      }
+      thirdSlots.push(m);
+    }
+  });
+
+  // 3) Pick 8 groups (out of 12) at random — those are the qualifying 3rd-place teams.
+  //    Using Fisher-Yates: Array.sort(() => Math.random() - 0.5) is biased and unreliable.
+  const allGroups = Object.keys(TEAMS).slice(); // A..L
+  shuffleInPlace(allGroups);
+  const qualifyingGroups = allGroups.slice(0, 8);
+
+  // 4) Backtracking: assign each of the 8 groups to one of the 8 third-place slots
+  //    such that the slot accepts that group. Slots and candidates are shuffled so
+  //    different clicks produce different valid pairings.
+  const slotOrder = thirdSlots.slice();
+  shuffleInPlace(slotOrder);
+  const assignment = {}; // slot.id -> group letter
+
+  function backtrack(idx, usedGroups) {
+    if (idx === slotOrder.length) return Object.keys(assignment).length === 8;
+    const slot = slotOrder[idx];
+    const eligible = slot.b.groups.filter(g => qualifyingGroups.includes(g) && !usedGroups.has(g));
+    shuffleInPlace(eligible);
+    for (const g of eligible) {
+      assignment[slot.id] = g;
+      usedGroups.add(g);
+      if (backtrack(idx + 1, usedGroups)) return true;
+      delete assignment[slot.id];
+      usedGroups.delete(g);
+    }
+    return false;
+  }
+
+  const ok = backtrack(0, new Set());
+
+  if (!ok) {
+    // Fallback: if for some unlikely combination there's no valid assignment,
+    // retry with a different random group selection (a few attempts).
+    for (let attempt = 0; attempt < 30 && !ok; attempt++) {
+      shuffleInPlace(allGroups);
+      const newQual = allGroups.slice(0, 8);
+      // overwrite the closure variable used inside backtrack
+      qualifyingGroups.length = 0;
+      qualifyingGroups.push(...newQual);
+      shuffleInPlace(slotOrder);
+      Object.keys(assignment).forEach(k => delete assignment[k]);
+      if (backtrack(0, new Set())) break;
+    }
+  }
+
+  // 5) Apply the assignment
+  Object.entries(assignment).forEach(([slotId, group]) => {
+    const team = getGroupTeam(group, 3);
+    state.matches[slotId].b = team;
+  });
+
+  // 6) Clear all rounds AFTER R32 since the matchups changed
+  [...R16_LEFT, ...R16_RIGHT, ...QF_LEFT, ...QF_RIGHT, ...SF_LEFT, ...SF_RIGHT, FINAL].forEach(m => {
+    state.matches[m.id] = { a: null, b: null, winner: null };
+  });
+  // Also clear R32 winners — we just rebuilt the matchups
+  [...R32_LEFT, ...R32_RIGHT].forEach(m => { state.matches[m.id].winner = null; });
+
+  renderAll();
+
+  // Show which groups' 3rd-placed teams advanced this time
+  if (typeof showToast === 'function') {
+    const sorted = [...qualifyingGroups].sort();
+    showToast(`3º colocados: ${sorted.join(', ')}`);
+  }
+}
+
+// Proper Fisher-Yates shuffle (in place)
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function resetBracket() {
+  // Reset only the knockout stage; keep group standings intact
+  Object.keys(state.matches).forEach(id => { state.matches[id] = { a: null, b: null, winner: null }; });
+  rebuildBracket();
+  renderAll();
+}
+
+// ============================================================
+// MAIN RENDER
+// ============================================================
+function renderAll() {
+  renderGroups();
+  renderBracket();
+  renderChampion();
+  updateProgress();
+}
+
+document.getElementById('autoR32Btn').addEventListener('click', autoFillR32);
+document.getElementById('resetBtn').addEventListener('click', resetBracket);
+
+// ============================================================
+// EXPORT TO PNG
+// ============================================================
+const exportDropdown = document.getElementById('exportDropdown');
+const exportBtn = document.getElementById('exportBtn');
+
+exportBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  exportDropdown.classList.toggle('open');
+});
+
+document.addEventListener('click', e => {
+  if (!exportDropdown.contains(e.target)) exportDropdown.classList.remove('open');
+});
+
+document.querySelectorAll('.dropdown-item[data-export]').forEach(item => {
+  item.addEventListener('click', () => {
+    const mode = item.dataset.export;
+    exportDropdown.classList.remove('open');
+    exportToPNG(mode);
+  });
+});
+
+function showToast(message, isError) {
+  let toast = document.getElementById('exportToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'exportToast';
+    toast.className = 'export-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.borderColor = isError ? '#ff6b6b' : 'var(--accent-gold)';
+  toast.style.color = isError ? '#ff6b6b' : 'var(--accent-gold)';
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 2200);
+}
+
+async function exportToPNG(mode) {
+  if (typeof html2canvas === 'undefined') {
+    showToast('Biblioteca não carregou — verifique a conexão', true);
+    return;
+  }
+  showToast('Gerando imagem…');
+
+  // The bracket needs at least ~1400px to render without clipping its R32 cards.
+  // We make the snapshot container wider than that, with comfortable side padding.
+  const SNAP_WIDTH = 1600;
+  const snap = document.createElement('div');
+  snap.style.cssText = `
+    position: fixed;
+    left: -99999px;
+    top: 0;
+    width: ${SNAP_WIDTH}px;
+    padding: 40px 40px 48px;
+    background: radial-gradient(ellipse at top, #1a1a1a 0%, #0a0a0a 60%, #050505 100%);
+    color: #f5f5f5;
+    font-family: 'Inter', system-ui, sans-serif;
+    box-sizing: border-box;
+  `;
+
+  // Header — solid gold title (html2canvas doesn't render -webkit-background-clip:text well,
+  // so the gradient would otherwise appear as a yellow box behind the text).
+  const header = document.createElement('div');
+  header.style.cssText = 'text-align:center; margin-bottom:28px;';
+  header.innerHTML = `
+    <div style="font-family:'Bebas Neue',sans-serif; font-size:52px; letter-spacing:3px;
+                color:#f4c430; line-height:1;">
+      FIFA WORLD CUP 2026
+    </div>
+    <div style="color:#8a8a8a; font-size:12px; margin-top:8px; letter-spacing:1.5px; text-transform:uppercase;">
+      Canadá · México · EUA — ${new Date().toLocaleDateString('pt-BR')}
+    </div>
+  `;
+  snap.appendChild(header);
+
+  // Section title helper
+  const addTitle = (text) => {
+    const t = document.createElement('div');
+    t.style.cssText = `
+      font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px;
+      color:#f4c430; margin:24px 0 14px; padding-left:12px;
+      border-left:4px solid #f4c430;
+    `;
+    t.textContent = text;
+    snap.appendChild(t);
+  };
+
+  let filename = 'world-cup-2026';
+
+  // Mark the snapshot with .export-mode so the CSS overrides for html2canvas kick in
+  // (transparent gradients are pre-flattened to solid gold-on-black tones).
+  snap.classList.add('export-mode');
+
+  if (mode === 'groups' || mode === 'all') {
+    addTitle('FASE DE GRUPOS');
+    const groupsClone = document.querySelector('.groups-wrapper').cloneNode(true);
+    // Force a 4-column grid for the snapshot regardless of viewport
+    const grid = groupsClone.querySelector('.groups-grid');
+    if (grid) grid.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:16px;';
+    snap.appendChild(groupsClone);
+    filename = mode === 'all' ? 'world-cup-2026-completo' : 'world-cup-2026-grupos';
+  }
+
+  if (mode === 'bracket' || mode === 'all') {
+    addTitle('MATA-MATA');
+    const bracketClone = document.querySelector('.bracket-container').cloneNode(true);
+    // Override the container: no overflow scroll, full natural width
+    bracketClone.style.cssText = 'overflow:visible; padding:8px 0; max-width:none;';
+    const bracketInner = bracketClone.querySelector('.bracket');
+    if (bracketInner) {
+      bracketInner.style.minWidth = '0';
+      bracketInner.style.width = '100%';
+    }
+    snap.appendChild(bracketClone);
+    if (mode === 'bracket') filename = 'world-cup-2026-mata-mata';
+  }
+
+  document.body.appendChild(snap);
+
+  try {
+    // Wait a tick so cloned images (flagcdn) get rendered/cached. Then html2canvas.
+    await new Promise(r => setTimeout(r, 150));
+    const canvas = await html2canvas(snap, {
+      backgroundColor: '#0a0a0a',
+      scale: 2,           // retina-quality PNG
+      useCORS: true,      // allow cross-origin flag images
+      logging: false,
+      width: SNAP_WIDTH,
+      height: snap.scrollHeight,
+      windowWidth: SNAP_WIDTH,
+      windowHeight: snap.scrollHeight
+    });
+    const link = document.createElement('a');
+    link.download = `${filename}-${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('✓ Imagem gerada');
+  } catch (err) {
+    console.error('Export error:', err);
+    showToast('Erro ao gerar imagem', true);
+  } finally {
+    snap.remove();
+  }
+}
+
+// Pré-preenche os grupos com os países nas posições da imagem.
+// O usuário ainda pode arrastar para reordenar.
+autoFillGroups();
+renderAll();
+</script>
+</body>
+</html>
