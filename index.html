@@ -318,6 +318,25 @@
     backdrop-filter: none !important;
   }
 
+  /* Touch drag ghost — follows the finger on mobile */
+  .touch-ghost {
+    position: fixed !important;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.85;
+    transform: scale(1.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    transition: transform 0.1s ease;
+  }
+  /* Disable default touch behaviors that interfere with drag */
+  .group-slot[data-team-id] {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
   /* Highlighted state for export: solid brown fill + 1px gold border, nothing else */
   .export-mode .group-slot.used-in-r32 {
     background: #2b2719 !important;
@@ -918,6 +937,150 @@ function renderGroups() {
     });
     el.addEventListener('dragend', () => el.classList.remove('dragging'));
   });
+
+  // ===== TOUCH SUPPORT =====
+  // HTML5 drag-and-drop doesn't fire on touch devices. We add a parallel touch layer
+  // that mirrors the desktop behavior: tap-and-hold a flag, drag it over a target, release.
+  attachTouchHandlers();
+}
+
+// Touch drag state (module-level so we don't recreate on every renderGroups call)
+const touchState = {
+  active: false,
+  teamId: null,
+  qualifies: false,
+  origin: null,    // the .group-slot being dragged from
+  ghost: null,     // floating visual that follows the finger
+  lastTarget: null // currently highlighted drop target
+};
+
+function attachTouchHandlers() {
+  document.querySelectorAll('.group-slot[data-team-id]').forEach(el => {
+    // Use { passive: false } so we can preventDefault and stop the page from scrolling
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove',  onTouchMove,  { passive: false });
+    el.addEventListener('touchend',   onTouchEnd,   { passive: false });
+    el.addEventListener('touchcancel',onTouchEnd,   { passive: false });
+  });
+}
+
+function onTouchStart(e) {
+  // Only respond to single-finger drags so pinch-zoom etc. still work
+  if (e.touches.length !== 1) return;
+  const el = e.currentTarget;
+  const teamId = el.dataset.teamId;
+  if (!teamId) return;
+  e.preventDefault();
+
+  touchState.active = true;
+  touchState.teamId = teamId;
+  touchState.qualifies = el.dataset.teamQualifies === 'true';
+  touchState.origin = el;
+  el.classList.add('dragging');
+
+  // Create a floating ghost that visually represents the team being moved
+  const ghost = el.cloneNode(true);
+  ghost.classList.add('touch-ghost');
+  ghost.style.width = el.offsetWidth + 'px';
+  document.body.appendChild(ghost);
+  touchState.ghost = ghost;
+  positionGhost(e.touches[0]);
+}
+
+function onTouchMove(e) {
+  if (!touchState.active || e.touches.length !== 1) return;
+  e.preventDefault();
+  positionGhost(e.touches[0]);
+
+  // Find what's under the finger. Hide the ghost first so it doesn't block the hit test.
+  touchState.ghost.style.pointerEvents = 'none';
+  touchState.ghost.style.display = 'none';
+  const under = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  touchState.ghost.style.display = '';
+
+  // Walk up looking for a valid drop target (group-slot or R32 slot)
+  const target = under?.closest('.group-slot, .match-slot.r32-slot');
+
+  if (target !== touchState.lastTarget) {
+    if (touchState.lastTarget) {
+      touchState.lastTarget.classList.remove('drag-over', 'drag-target');
+    }
+    if (target) {
+      if (target.classList.contains('group-slot')) target.classList.add('drag-over');
+      else target.classList.add('drag-target');
+    }
+    touchState.lastTarget = target;
+  }
+}
+
+function onTouchEnd(e) {
+  if (!touchState.active) return;
+  e.preventDefault();
+
+  const target = touchState.lastTarget;
+  const teamId = touchState.teamId;
+  const team = ALL_TEAMS.find(t => t.id === teamId);
+
+  // Clean up visuals BEFORE acting (renderAll() will rebuild DOM)
+  if (touchState.origin) touchState.origin.classList.remove('dragging');
+  if (touchState.ghost) touchState.ghost.remove();
+  if (target) target.classList.remove('drag-over', 'drag-target');
+
+  const wasActive = { ...touchState };
+  touchState.active = false;
+  touchState.teamId = null;
+  touchState.origin = null;
+  touchState.ghost = null;
+  touchState.lastTarget = null;
+
+  if (!team || !target) return;
+
+  // Dispatch to the same logic the mouse handlers use
+  if (target.classList.contains('group-slot')) {
+    // Drop into a group position — same swap behavior as desktop
+    const g = target.dataset.group;
+    const pos = parseInt(target.dataset.pos);
+    removeFromR32IfPresent(team.id);
+    placeTeam(team, g, pos);
+  } else if (target.classList.contains('r32-slot')) {
+    // Drop onto a knockout slot — only valid if the team qualifies AND fits the slot
+    if (!wasActive.qualifies) return;
+    const matchId = target.dataset.match;
+    const side = target.dataset.slotSide;
+    const matchDef = findR32MatchDef(matchId);
+    if (!matchDef) return;
+    const slotSpec = side === 'a' ? matchDef.a : matchDef.b;
+    if (!isValidForSlot(team, slotSpec)) {
+      target.classList.add('invalid-drop');
+      setTimeout(() => target.classList.remove('invalid-drop'), 600);
+      return;
+    }
+    // Remove from any other R32 slot it currently occupies
+    [...R32_LEFT, ...R32_RIGHT].forEach(other => {
+      ['a', 'b'].forEach(s => {
+        if (state.matches[other.id][s]?.id === team.id) {
+          state.matches[other.id][s] = null;
+          if (state.matches[other.id].winner) {
+            state.matches[other.id].winner = null;
+            propagateClearDownstream(other.id);
+          }
+        }
+      });
+    });
+    if (state.matches[matchId][side] && state.matches[matchId].winner === side) {
+      state.matches[matchId].winner = null;
+      propagateClearDownstream(matchId);
+    }
+    state.matches[matchId][side] = team;
+    renderAll();
+  }
+}
+
+function positionGhost(touch) {
+  if (!touchState.ghost) return;
+  const g = touchState.ghost;
+  g.style.left = (touch.clientX - g.offsetWidth / 2) + 'px';
+  g.style.top  = (touch.clientY - g.offsetHeight / 2) + 'px';
 }
 
 function placeTeam(team, group, pos) {
