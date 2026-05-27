@@ -302,10 +302,13 @@
   .thirds-wrapper {
     max-width: 3840px;
     margin: 0 auto;
+    /* Same grid sizing as .groups-grid, so a single thirds-card has the same width
+       as one group card in the row above. */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
   }
-  /* A single vertical card, the same width as one group card (~220px+) */
   .thirds-card {
-    max-width: 360px;
     background: linear-gradient(180deg, rgba(26,26,26,0.95) 0%, rgba(18,18,18,0.95) 100%);
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 14px;
@@ -610,20 +613,20 @@
   }
   /* Loser keeps its normal appearance; only the winner is highlighted. */
   .match-flag {
-    width: 22px;
-    height: 16px;
-    border-radius: 2px;
+    width: 28px;
+    height: 20px;
+    border-radius: 3px;
     background-size: cover;
     background-position: center;
     flex-shrink: 0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
   .match-flag.empty {
     background: rgba(255,255,255,0.05);
     border: 1px dashed rgba(255,255,255,0.15);
   }
   .match-name {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     overflow: hidden;
     text-overflow: ellipsis;
