@@ -62,7 +62,7 @@
   }
   /* When controls are placed between sections (group → bracket) */
   .bracket-controls {
-    max-width: 1400px;
+    max-width: 3840px;
     margin: 32px auto 8px;
   }
   .bracket-controls .controls { margin-top: 0; }
@@ -300,10 +300,12 @@
 
   /* ==== THIRDS RANKING SECTION ==== */
   .thirds-wrapper {
-    max-width: 1400px;
+    max-width: 3840px;
     margin: 0 auto;
   }
+  /* A single vertical card, the same width as one group card (~220px+) */
   .thirds-card {
+    max-width: 360px;
     background: linear-gradient(180deg, rgba(26,26,26,0.95) 0%, rgba(18,18,18,0.95) 100%);
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 14px;
@@ -317,23 +319,28 @@
     margin-bottom: 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    flex-wrap: wrap;
-    gap: 8px;
   }
   .thirds-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
+    font-size: 22px;
     color: var(--accent-gold);
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
+  }
+  .thirds-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
   .thirds-hint {
     font-size: 11px;
     color: var(--text-dim);
-    letter-spacing: 0.5px;
+    margin-top: 10px;
+    line-height: 1.4;
   }
-  .thirds-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  .thirds-list {
+    display: flex;
+    flex-direction: column;
     gap: 6px;
   }
   /* A third-slot reuses the same look as a group-slot */
@@ -342,7 +349,7 @@
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 8px;
     min-height: 42px;
@@ -449,8 +456,8 @@
   .export-mode .match-slot.winner .match-name {
     color: #ffffff !important;
   }
-  /* Third-place ranking: flatten card + highlight qualifiers like the group rows */
-  .export-mode .thirds-card {
+  /* Third-place ranking: flatten columns + highlight qualifiers like the group rows */
+  .export-mode .thirds-column {
     background: #161616 !important;
     background-image: none !important;
     border-color: rgb(36, 36, 36) !important;
@@ -551,7 +558,7 @@
   .match-slot {
     display: flex;
     align-items: center;
-    gap: px;
+    gap: 8px;
     padding: 6px 8px;
     background: var(--slot-empty);
     border-radius: 5px;
@@ -692,7 +699,7 @@
 
   /* PROGRESS */
   .progress-bar {
-    max-width: 1400px;
+    max-width: 3840px;
     margin: 14px auto 0;
     background: rgba(255,255,255,0.05);
     border-radius: 999px;
@@ -729,10 +736,11 @@
 <div class="thirds-wrapper">
   <div class="thirds-card">
     <div class="thirds-header">
-      <div class="thirds-title">12 SELEÇÕES — Top 8 avança ao mata-mata</div>
-      <div class="thirds-hint">Arraste para reordenar conforme o desempenho na fase de grupos</div>
+      <div class="thirds-title">12 SELEÇÕES</div>
+      <div class="thirds-label">Top 8 avança</div>
     </div>
-    <div class="thirds-grid" id="thirdsGrid"></div>
+    <div class="thirds-list" id="thirdsGrid"></div>
+    <div class="thirds-hint">Arraste para reordenar conforme o desempenho na fase de grupos</div>
   </div>
 </div>
 
@@ -837,7 +845,7 @@ const TEAMS = {
     { code: 'GER', name: 'Alemanha', flag: '🇩🇪', cc: 'de' },
     { code: 'ECU', name: 'Equador', flag: '🇪🇨', cc: 'ec' },
     { code: 'CIV', name: 'Costa do Marfim', flag: '🇨🇮', cc: 'ci' },
-    { code: 'CUW', name: 'Curaçao', flag: '🇨🇼', cc: 'cw' }
+    { code: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', cc: 'cv' }
   ],
   F: [
     { code: 'JPN', name: 'Japão', flag: '🇯🇵', cc: 'jp' },
@@ -854,7 +862,7 @@ const TEAMS = {
   H: [
     { code: 'ESP', name: 'Espanha', flag: '🇪🇸', cc: 'es' },
     { code: 'URU', name: 'Uruguai', flag: '🇺🇾', cc: 'uy' },
-    { code: 'KSA', name: 'Arábia Saudita', flag: '🇸🇦', cc: 'sa' },
+    { code: 'IRN', name: 'Irã', flag: '🇮🇷', cc: 'ir' },
     { code: 'CPV2', name: 'Cabo Verde', flag: '🇨🇻', cc: 'cv' }
   ],
   I: [
@@ -867,7 +875,7 @@ const TEAMS = {
     { code: 'ARG', name: 'Argentina', flag: '🇦🇷', cc: 'ar' },
     { code: 'ALG', name: 'Argélia', flag: '🇩🇿', cc: 'dz' },
     { code: 'AUT', name: 'Áustria', flag: '🇦🇹', cc: 'at' },
-    { code: 'JOR', name: 'Jordânia', flag: '🇯🇴', cc: 'jo' }
+    { code: 'PLE', name: 'Palestina', flag: '🇵🇸', cc: 'ps' }
   ],
   K: [
     { code: 'POR', name: 'Portugal', flag: '🇵🇹', cc: 'pt' },
@@ -1399,6 +1407,8 @@ function renderThirds() {
   const grid = document.getElementById('thirdsGrid');
   if (!grid) return;
   grid.innerHTML = '';
+
+  // Render all 12 thirds as a single vertical stack
   state.thirdsRanking.forEach((group, idx) => {
     const team = getGroupTeam(group, 3);
     const qualifies = idx < 8;
@@ -1826,7 +1836,7 @@ async function exportToPNG(mode) {
   }
   showToast('Gerando imagem…');
 
-  // The bracket needs at least ~1400px to render without clipping its R32 cards.
+  // The bracket needs at least ~3840px to render without clipping its R32 cards.
   // We make the snapshot container wider than that, with comfortable side padding.
   const SNAP_WIDTH = 1600;
   const snap = document.createElement('div');
@@ -1882,6 +1892,14 @@ async function exportToPNG(mode) {
     const grid = groupsClone.querySelector('.groups-grid');
     if (grid) grid.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:16px;';
     snap.appendChild(groupsClone);
+
+    // Also include the 3rd-place ranking — it's part of the pre-knockout picture
+    addTitle('RANKING DOS 3º COLOCADOS');
+    const thirdsClone = document.querySelector('.thirds-wrapper').cloneNode(true);
+    const thirdsGrid = thirdsClone.querySelector('.thirds-grid');
+    if (thirdsGrid) thirdsGrid.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:16px;';
+    snap.appendChild(thirdsClone);
+
     filename = mode === 'all' ? 'world-cup-2026-completo' : 'world-cup-2026-grupos';
   }
 
