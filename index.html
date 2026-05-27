@@ -62,7 +62,7 @@
   }
   /* When controls are placed between sections (group → bracket) */
   .bracket-controls {
-    max-width: 3840px;
+    max-width: 1400px;
     margin: 32px auto 8px;
   }
   .bracket-controls .controls { margin-top: 0; }
@@ -300,40 +300,37 @@
 
   /* ==== THIRDS RANKING SECTION ==== */
   .thirds-wrapper {
-    max-width: 3840px;
+    max-width: 1400px;
     margin: 0 auto;
   }
-  .thirds-card {
+  .thirds-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    padding: 0 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .thirds-subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+  /* Same grid layout as the groups — cards side-by-side, slots stacked vertically inside */
+  .thirds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .thirds-column {
     background: linear-gradient(180deg, rgba(26,26,26,0.95) 0%, rgba(18,18,18,0.95) 100%);
     border: 1px solid rgba(255,255,255,0.12);
     border-radius: 14px;
     padding: 14px;
     backdrop-filter: blur(10px);
-  }
-  .thirds-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .thirds-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 18px;
-    color: var(--accent-gold);
-    letter-spacing: 1.5px;
-  }
-  .thirds-hint {
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 0.5px;
-  }
-  .thirds-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    flex-direction: column;
     gap: 6px;
   }
   /* A third-slot reuses the same look as a group-slot */
@@ -342,7 +339,7 @@
     align-items: center;
     gap: 10px;
     padding: 8px 10px;
-    background: rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.18);
     border-radius: 8px;
     min-height: 42px;
@@ -449,8 +446,8 @@
   .export-mode .match-slot.winner .match-name {
     color: #ffffff !important;
   }
-  /* Third-place ranking: flatten card + highlight qualifiers like the group rows */
-  .export-mode .thirds-card {
+  /* Third-place ranking: flatten columns + highlight qualifiers like the group rows */
+  .export-mode .thirds-column {
     background: #161616 !important;
     background-image: none !important;
     border-color: rgb(36, 36, 36) !important;
@@ -692,7 +689,7 @@
 
   /* PROGRESS */
   .progress-bar {
-    max-width: 3840px;
+    max-width: 1400px;
     margin: 14px auto 0;
     background: rgba(255,255,255,0.05);
     border-radius: 999px;
@@ -727,13 +724,11 @@
 
 <div class="section-title">RANKING DOS 3º COLOCADOS</div>
 <div class="thirds-wrapper">
-  <div class="thirds-card">
-    <div class="thirds-header">
-      <div class="thirds-title">12 SELEÇÕES — Top 8 avança ao mata-mata</div>
-      <div class="thirds-hint">Arraste para reordenar conforme o desempenho na fase de grupos</div>
-    </div>
-    <div class="thirds-grid" id="thirdsGrid"></div>
+  <div class="thirds-header-bar">
+    <div class="thirds-subtitle">12 seleções — Top 8 (em dourado) avança ao mata-mata</div>
+    <div class="thirds-subtitle">Arraste para reordenar conforme o desempenho na fase de grupos</div>
   </div>
+  <div class="thirds-grid" id="thirdsGrid"></div>
 </div>
 
 <div class="bracket-controls">
@@ -837,7 +832,7 @@ const TEAMS = {
     { code: 'GER', name: 'Alemanha', flag: '🇩🇪', cc: 'de' },
     { code: 'ECU', name: 'Equador', flag: '🇪🇨', cc: 'ec' },
     { code: 'CIV', name: 'Costa do Marfim', flag: '🇨🇮', cc: 'ci' },
-    { code: 'CPV', name: 'Cabo Verde', flag: '🇨🇻', cc: 'cv' }
+    { code: 'CUW', name: 'Curaçao', flag: '🇨🇼', cc: 'cw' }
   ],
   F: [
     { code: 'JPN', name: 'Japão', flag: '🇯🇵', cc: 'jp' },
@@ -854,7 +849,7 @@ const TEAMS = {
   H: [
     { code: 'ESP', name: 'Espanha', flag: '🇪🇸', cc: 'es' },
     { code: 'URU', name: 'Uruguai', flag: '🇺🇾', cc: 'uy' },
-    { code: 'IRN', name: 'Irã', flag: '🇮🇷', cc: 'ir' },
+    { code: 'KSA', name: 'Arábia Saudita', flag: '🇸🇦', cc: 'sa' },
     { code: 'CPV2', name: 'Cabo Verde', flag: '🇨🇻', cc: 'cv' }
   ],
   I: [
@@ -867,7 +862,7 @@ const TEAMS = {
     { code: 'ARG', name: 'Argentina', flag: '🇦🇷', cc: 'ar' },
     { code: 'ALG', name: 'Argélia', flag: '🇩🇿', cc: 'dz' },
     { code: 'AUT', name: 'Áustria', flag: '🇦🇹', cc: 'at' },
-    { code: 'PLE', name: 'Palestina', flag: '🇵🇸', cc: 'ps' }
+    { code: 'JOR', name: 'Jordânia', flag: '🇯🇴', cc: 'jo' }
   ],
   K: [
     { code: 'POR', name: 'Portugal', flag: '🇵🇹', cc: 'pt' },
@@ -1399,25 +1394,37 @@ function renderThirds() {
   const grid = document.getElementById('thirdsGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  state.thirdsRanking.forEach((group, idx) => {
-    const team = getGroupTeam(group, 3);
-    const qualifies = idx < 8;
-    const slot = document.createElement('div');
-    slot.className = `third-slot ${qualifies ? 'qualifies' : ''}`;
-    slot.draggable = true;
-    slot.dataset.group = group;
-    slot.dataset.pos = idx;
-    slot.innerHTML = `
-      <div class="slot-rank">${idx + 1}º</div>
-      ${team ? `<div class="slot-flag" style="${flagBg(team)}"></div>
-               <div class="slot-name">${team.name}</div>
-               <div class="slot-group">${group}</div>`
-            : `<div class="slot-flag empty"></div>
-               <div class="slot-name empty">—</div>
-               <div class="slot-group">${group}</div>`}
-    `;
-    grid.appendChild(slot);
-  });
+
+  // Split the 12 thirds into 4 vertical columns of 3 each, matching the groups layout
+  // (which is also auto-fill on a 220px minmax grid — so the columns align visually).
+  const COLS = 4;
+  const ROWS = 3;
+  for (let c = 0; c < COLS; c++) {
+    const col = document.createElement('div');
+    col.className = 'thirds-column';
+    for (let r = 0; r < ROWS; r++) {
+      const idx = c * ROWS + r;
+      const group = state.thirdsRanking[idx];
+      const team = getGroupTeam(group, 3);
+      const qualifies = idx < 8;
+      const slot = document.createElement('div');
+      slot.className = `third-slot ${qualifies ? 'qualifies' : ''}`;
+      slot.draggable = true;
+      slot.dataset.group = group;
+      slot.dataset.pos = idx;
+      slot.innerHTML = `
+        <div class="slot-rank">${idx + 1}º</div>
+        ${team ? `<div class="slot-flag" style="${flagBg(team)}"></div>
+                 <div class="slot-name">${team.name}</div>
+                 <div class="slot-group">${group}</div>`
+              : `<div class="slot-flag empty"></div>
+                 <div class="slot-name empty">—</div>
+                 <div class="slot-group">${group}</div>`}
+      `;
+      col.appendChild(slot);
+    }
+    grid.appendChild(col);
+  }
 
   // Desktop drag handlers
   document.querySelectorAll('.third-slot').forEach(slot => {
@@ -1826,7 +1833,7 @@ async function exportToPNG(mode) {
   }
   showToast('Gerando imagem…');
 
-  // The bracket needs at least ~3840px to render without clipping its R32 cards.
+  // The bracket needs at least ~1400px to render without clipping its R32 cards.
   // We make the snapshot container wider than that, with comfortable side padding.
   const SNAP_WIDTH = 1600;
   const snap = document.createElement('div');
@@ -1882,6 +1889,14 @@ async function exportToPNG(mode) {
     const grid = groupsClone.querySelector('.groups-grid');
     if (grid) grid.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:16px;';
     snap.appendChild(groupsClone);
+
+    // Also include the 3rd-place ranking — it's part of the pre-knockout picture
+    addTitle('RANKING DOS 3º COLOCADOS');
+    const thirdsClone = document.querySelector('.thirds-wrapper').cloneNode(true);
+    const thirdsGrid = thirdsClone.querySelector('.thirds-grid');
+    if (thirdsGrid) thirdsGrid.style.cssText = 'display:grid; grid-template-columns:repeat(4,1fr); gap:16px;';
+    snap.appendChild(thirdsClone);
+
     filename = mode === 'all' ? 'world-cup-2026-completo' : 'world-cup-2026-grupos';
   }
 
