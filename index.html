@@ -298,6 +298,95 @@
     background: rgba(244,196,48,0.15);
   }
 
+  /* ==== THIRDS RANKING SECTION ==== */
+  .thirds-wrapper {
+    max-width: 3840px;
+    margin: 0 auto;
+  }
+  .thirds-card {
+    background: linear-gradient(180deg, rgba(26,26,26,0.95) 0%, rgba(18,18,18,0.95) 100%);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 14px;
+    backdrop-filter: blur(10px);
+  }
+  .thirds-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .thirds-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--accent-gold);
+    letter-spacing: 1.5px;
+  }
+  .thirds-hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+  .thirds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 6px;
+  }
+  /* A third-slot reuses the same look as a group-slot */
+  .third-slot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 8px;
+    min-height: 42px;
+    transition: all 0.2s;
+    cursor: grab;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .third-slot:active { cursor: grabbing; }
+  .third-slot.dragging { opacity: 0.4; }
+  .third-slot.drag-over {
+    background: rgba(244, 196, 48, 0.15);
+    border-color: var(--accent-gold);
+  }
+  /* Qualifying 3rds (positions 1-8) — gold highlight */
+  .third-slot.qualifies {
+    background: linear-gradient(90deg, rgba(244,196,48,0.18), rgba(244,196,48,0.06));
+    border-color: rgba(244,196,48,0.45);
+    box-shadow: inset 3px 0 0 var(--accent-gold);
+  }
+  .third-slot.qualifies .slot-name {
+    color: var(--accent-gold);
+    font-weight: 700;
+  }
+  .third-slot.qualifies .slot-rank {
+    color: var(--accent-gold);
+    background: rgba(244,196,48,0.15);
+  }
+  .third-slot .slot-group {
+    font-size: 10px;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.08);
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .third-slot.qualifies .slot-group {
+    background: rgba(244,196,48,0.2);
+    color: var(--accent-gold);
+  }
+
   /* ==== EXPORT MODE OVERRIDES ====
      html2canvas doesn't compose rgba() gradients, transparent backgrounds,
      or backdrop-filter correctly. Inside .export-mode we replace every
@@ -359,6 +448,27 @@
   }
   .export-mode .match-slot.winner .match-name {
     color: #ffffff !important;
+  }
+  /* Third-place ranking: flatten card + highlight qualifiers like the group rows */
+  .export-mode .thirds-card {
+    background: #161616 !important;
+    background-image: none !important;
+    border-color: rgb(36, 36, 36) !important;
+    backdrop-filter: none !important;
+  }
+  .export-mode .third-slot.qualifies {
+    background: #2b2719 !important;
+    background-image: none !important;
+    border: 1px solid #f4c430 !important;
+    box-shadow: none !important;
+  }
+  .export-mode .third-slot.qualifies .slot-name {
+    color: #ffffff !important;
+  }
+  .export-mode .third-slot.qualifies .slot-rank,
+  .export-mode .third-slot.qualifies .slot-group {
+    background: #2b2719 !important;
+    background-image: none !important;
   }
 
   /* KNOCKOUT BRACKET — proper vertical alignment using flex:1 wrappers */
@@ -615,9 +725,19 @@
   <div class="groups-grid" id="groupsGrid"></div>
 </div>
 
+<div class="section-title">RANKING DOS 3º COLOCADOS</div>
+<div class="thirds-wrapper">
+  <div class="thirds-card">
+    <div class="thirds-header">
+      <div class="thirds-title">12 SELEÇÕES — Top 8 avança ao mata-mata</div>
+      <div class="thirds-hint">Arraste para reordenar conforme o desempenho na fase de grupos</div>
+    </div>
+    <div class="thirds-grid" id="thirdsGrid"></div>
+  </div>
+</div>
+
 <div class="bracket-controls">
   <div class="controls">
-    <button class="btn primary" id="autoR32Btn">🎲 Sortear 3º Colocados</button>
     <button class="btn" id="resetBtn">↺ Resetar Chaveamento</button>
     <div class="dropdown" id="exportDropdown">
       <button class="btn" id="exportBtn">📷 Exportar PNG ▾</button>
@@ -833,7 +953,12 @@ const FINAL = { id: 'F', date: '07/19', city: 'NY/NJ', from: ['L15','R15'] };
 // ============================================================
 const state = {
   groups: {},          // { A: [team|null, team|null, ...4] }
-  matches: {}          // { matchId: { a: team|null, b: team|null, winner: 'a'|'b'|null } }
+  matches: {},         // { matchId: { a: team|null, b: team|null, winner: 'a'|'b'|null } }
+  // Ordered list of the 12 group letters (A..L) representing the 3rd-place ranking.
+  // Position 0..7 are the qualifying thirds (best campaign), 8..11 are eliminated.
+  // The user can drag to reorder; we store group letters (not team ids) so swapping a
+  // team within its group automatically updates this list to point at the new 3rd-placed team.
+  thirdsRanking: Object.keys(TEAMS).slice() // initial order: A, B, C, ..., L
 };
 
 // Init empty groups
@@ -1126,11 +1251,11 @@ function getThirdPlace(groups) {
 }
 
 function rebuildBracket() {
-  // The fixed R32 slots (1st/2nd of each group) are now auto-filled from the current standings.
-  // The variable R32 slots (best 3rd-place) are only filled when the user clicks "Preencher Mata-mata"
-  // or drags a 3rd-place team into them manually.
+  // The fixed R32 slots (1st/2nd of each group) are auto-filled from current standings.
+  // The variable R32 slots (best 3rd-place) are auto-filled from state.thirdsRanking
+  // (top 8 of the 12 thirds, allocated to compatible slots via backtracking).
   const allR32 = [...R32_LEFT, ...R32_RIGHT];
-  // First, invalidate slots that no longer hold a valid team (e.g. after a swap)
+  // First, invalidate slots that no longer hold a valid team
   allR32.forEach(m => {
     ['a', 'b'].forEach(side => {
       const currentTeam = state.matches[m.id][side];
@@ -1141,8 +1266,9 @@ function rebuildBracket() {
       }
     });
   });
-  // Auto-fill the fixed (1st/2nd) slots from current group standings
+  // Auto-fill the fixed (1st/2nd) slots and the variable (3rd-place) slots
   fillFixedSlots();
+  fillThirdPlaceSlots();
   // Re-propagate winners through later rounds (in case some are still valid)
   allR32.forEach(m => {
     if (state.matches[m.id].winner) propagateWinner(m.id);
@@ -1264,6 +1390,136 @@ function matchHTML(m) {
       </div>
     </div>
   `;
+}
+
+// ============================================================
+// THIRDS RANKING RENDER + DRAG HANDLERS
+// ============================================================
+function renderThirds() {
+  const grid = document.getElementById('thirdsGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  state.thirdsRanking.forEach((group, idx) => {
+    const team = getGroupTeam(group, 3);
+    const qualifies = idx < 8;
+    const slot = document.createElement('div');
+    slot.className = `third-slot ${qualifies ? 'qualifies' : ''}`;
+    slot.draggable = true;
+    slot.dataset.group = group;
+    slot.dataset.pos = idx;
+    slot.innerHTML = `
+      <div class="slot-rank">${idx + 1}º</div>
+      ${team ? `<div class="slot-flag" style="${flagBg(team)}"></div>
+               <div class="slot-name">${team.name}</div>
+               <div class="slot-group">${group}</div>`
+            : `<div class="slot-flag empty"></div>
+               <div class="slot-name empty">—</div>
+               <div class="slot-group">${group}</div>`}
+    `;
+    grid.appendChild(slot);
+  });
+
+  // Desktop drag handlers
+  document.querySelectorAll('.third-slot').forEach(slot => {
+    slot.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', slot.dataset.group);
+      e.dataTransfer.setData('source', 'thirds');
+      e.dataTransfer.effectAllowed = 'move';
+      slot.classList.add('dragging');
+    });
+    slot.addEventListener('dragend', () => slot.classList.remove('dragging'));
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      slot.classList.add('drag-over');
+    });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+      const source = e.dataTransfer.getData('source');
+      if (source !== 'thirds') return;
+      const fromGroup = e.dataTransfer.getData('text/plain');
+      const toPos = parseInt(slot.dataset.pos);
+      swapThirdsRanking(fromGroup, toPos);
+    });
+
+    // Touch handlers (mirror of group-slot touch logic)
+    slot.addEventListener('touchstart', onThirdsTouchStart, { passive: false });
+    slot.addEventListener('touchmove',  onThirdsTouchMove,  { passive: false });
+    slot.addEventListener('touchend',   onThirdsTouchEnd,   { passive: false });
+    slot.addEventListener('touchcancel',onThirdsTouchEnd,   { passive: false });
+  });
+}
+
+function swapThirdsRanking(fromGroup, toPos) {
+  const fromPos = state.thirdsRanking.indexOf(fromGroup);
+  if (fromPos === -1 || fromPos === toPos) return;
+  const target = state.thirdsRanking[toPos];
+  state.thirdsRanking[toPos] = fromGroup;
+  state.thirdsRanking[fromPos] = target;
+  rebuildBracket();
+  renderAll();
+}
+
+// Touch state specific to the thirds ranking
+const thirdsTouchState = {
+  active: false, group: null, origin: null, ghost: null, lastTarget: null
+};
+
+function onThirdsTouchStart(e) {
+  if (e.touches.length !== 1) return;
+  const el = e.currentTarget;
+  e.preventDefault();
+  thirdsTouchState.active = true;
+  thirdsTouchState.group = el.dataset.group;
+  thirdsTouchState.origin = el;
+  el.classList.add('dragging');
+  const ghost = el.cloneNode(true);
+  ghost.classList.add('touch-ghost');
+  ghost.style.width = el.offsetWidth + 'px';
+  document.body.appendChild(ghost);
+  thirdsTouchState.ghost = ghost;
+  positionThirdsGhost(e.touches[0]);
+}
+
+function onThirdsTouchMove(e) {
+  if (!thirdsTouchState.active || e.touches.length !== 1) return;
+  e.preventDefault();
+  positionThirdsGhost(e.touches[0]);
+  thirdsTouchState.ghost.style.display = 'none';
+  const under = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  thirdsTouchState.ghost.style.display = '';
+  const target = under?.closest('.third-slot');
+  if (target !== thirdsTouchState.lastTarget) {
+    if (thirdsTouchState.lastTarget) thirdsTouchState.lastTarget.classList.remove('drag-over');
+    if (target) target.classList.add('drag-over');
+    thirdsTouchState.lastTarget = target;
+  }
+}
+
+function onThirdsTouchEnd(e) {
+  if (!thirdsTouchState.active) return;
+  e.preventDefault();
+  const target = thirdsTouchState.lastTarget;
+  const group = thirdsTouchState.group;
+  if (thirdsTouchState.origin) thirdsTouchState.origin.classList.remove('dragging');
+  if (thirdsTouchState.ghost) thirdsTouchState.ghost.remove();
+  if (target) target.classList.remove('drag-over');
+  thirdsTouchState.active = false;
+  thirdsTouchState.group = null;
+  thirdsTouchState.origin = null;
+  thirdsTouchState.ghost = null;
+  thirdsTouchState.lastTarget = null;
+  if (!target || !group) return;
+  const toPos = parseInt(target.dataset.pos);
+  swapThirdsRanking(group, toPos);
+}
+
+function positionThirdsGhost(touch) {
+  const g = thirdsTouchState.ghost;
+  if (!g) return;
+  g.style.left = (touch.clientX - g.offsetWidth / 2) + 'px';
+  g.style.top  = (touch.clientY - g.offsetHeight / 2) + 'px';
 }
 
 function renderBracket() {
@@ -1447,44 +1703,32 @@ function fillFixedSlots() {
   });
 }
 
-// Fill only the "best 3rd-place" R32 slots, choosing 8 of the 12 third-placed teams at random.
-// Each slot accepts only teams from certain groups, and a team can occupy at most one slot.
-// Uses backtracking to find a valid assignment.
-function autoFillR32() {
-  // 1) Make sure the fixed slots are already filled — defensive
-  fillFixedSlots();
-
-  // 2) Clear ALL existing g3 slots so we start fresh
+// Fill the 8 "best 3rd-place" R32 slots using the user-ordered thirdsRanking.
+// Top 8 groups in the ranking are the qualifiers; positions 9-12 are eliminated.
+// Allocates them to compatible slots via backtracking (each slot only accepts certain groups).
+function fillThirdPlaceSlots() {
+  // 1) Snapshot previous third-place assignments so we can detect changes and clear
+  //    downstream winners only for slots that actually changed.
   const thirdSlots = [];
+  const previousByMatchId = {};
   [...R32_LEFT, ...R32_RIGHT].forEach(m => {
     if (m.b.type === 'g3') {
-      state.matches[m.id].b = null;
-      if (state.matches[m.id].winner === 'b') {
-        state.matches[m.id].winner = null;
-        propagateClearDownstream(m.id);
-      }
+      previousByMatchId[m.id] = state.matches[m.id].b;
       thirdSlots.push(m);
     }
   });
 
-  // 3) Pick 8 groups (out of 12) at random — those are the qualifying 3rd-place teams.
-  //    Using Fisher-Yates: Array.sort(() => Math.random() - 0.5) is biased and unreliable.
-  const allGroups = Object.keys(TEAMS).slice(); // A..L
-  shuffleInPlace(allGroups);
-  const qualifyingGroups = allGroups.slice(0, 8);
+  // 2) Qualifying groups = first 8 in the user-ordered ranking
+  const qualifyingGroups = state.thirdsRanking.slice(0, 8);
 
-  // 4) Backtracking: assign each of the 8 groups to one of the 8 third-place slots
-  //    such that the slot accepts that group. Slots and candidates are shuffled so
-  //    different clicks produce different valid pairings.
-  const slotOrder = thirdSlots.slice();
-  shuffleInPlace(slotOrder);
-  const assignment = {}; // slot.id -> group letter
-
+  // 3) Backtracking: assign each qualifying group to a compatible R32 slot.
+  //    Iterate slots in their natural (fixed) order so the same ranking always
+  //    produces the same R32 layout — fully deterministic, not random.
+  const assignment = {}; // matchId -> group letter
   function backtrack(idx, usedGroups) {
-    if (idx === slotOrder.length) return Object.keys(assignment).length === 8;
-    const slot = slotOrder[idx];
+    if (idx === thirdSlots.length) return Object.keys(assignment).length === Math.min(8, qualifyingGroups.length);
+    const slot = thirdSlots[idx];
     const eligible = slot.b.groups.filter(g => qualifyingGroups.includes(g) && !usedGroups.has(g));
-    shuffleInPlace(eligible);
     for (const g of eligible) {
       assignment[slot.id] = g;
       usedGroups.add(g);
@@ -1492,55 +1736,28 @@ function autoFillR32() {
       delete assignment[slot.id];
       usedGroups.delete(g);
     }
+    // Allow empty assignment if not enough teams yet (e.g., during ranking edits)
+    if (qualifyingGroups.length < 8) {
+      delete assignment[slot.id];
+      if (backtrack(idx + 1, usedGroups)) return true;
+    }
     return false;
   }
+  backtrack(0, new Set());
 
-  const ok = backtrack(0, new Set());
-
-  if (!ok) {
-    // Fallback: if for some unlikely combination there's no valid assignment,
-    // retry with a different random group selection (a few attempts).
-    for (let attempt = 0; attempt < 30 && !ok; attempt++) {
-      shuffleInPlace(allGroups);
-      const newQual = allGroups.slice(0, 8);
-      // overwrite the closure variable used inside backtrack
-      qualifyingGroups.length = 0;
-      qualifyingGroups.push(...newQual);
-      shuffleInPlace(slotOrder);
-      Object.keys(assignment).forEach(k => delete assignment[k]);
-      if (backtrack(0, new Set())) break;
+  // 4) Apply the assignment, clearing winners only where the team changed
+  thirdSlots.forEach(slot => {
+    const group = assignment[slot.id];
+    const newTeam = group ? getGroupTeam(group, 3) : null;
+    const prev = previousByMatchId[slot.id];
+    if ((prev?.id || null) !== (newTeam?.id || null)) {
+      state.matches[slot.id].b = newTeam;
+      if (state.matches[slot.id].winner === 'b') {
+        state.matches[slot.id].winner = null;
+        propagateClearDownstream(slot.id);
+      }
     }
-  }
-
-  // 5) Apply the assignment
-  Object.entries(assignment).forEach(([slotId, group]) => {
-    const team = getGroupTeam(group, 3);
-    state.matches[slotId].b = team;
   });
-
-  // 6) Clear all rounds AFTER R32 since the matchups changed
-  [...R16_LEFT, ...R16_RIGHT, ...QF_LEFT, ...QF_RIGHT, ...SF_LEFT, ...SF_RIGHT, FINAL].forEach(m => {
-    state.matches[m.id] = { a: null, b: null, winner: null };
-  });
-  // Also clear R32 winners — we just rebuilt the matchups
-  [...R32_LEFT, ...R32_RIGHT].forEach(m => { state.matches[m.id].winner = null; });
-
-  renderAll();
-
-  // Show which groups' 3rd-placed teams advanced this time
-  if (typeof showToast === 'function') {
-    const sorted = [...qualifyingGroups].sort();
-    showToast(`3º colocados: ${sorted.join(', ')}`);
-  }
-}
-
-// Proper Fisher-Yates shuffle (in place)
-function shuffleInPlace(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }
 
 function resetBracket() {
@@ -1555,12 +1772,12 @@ function resetBracket() {
 // ============================================================
 function renderAll() {
   renderGroups();
+  renderThirds();
   renderBracket();
   renderChampion();
   updateProgress();
 }
 
-document.getElementById('autoR32Btn').addEventListener('click', autoFillR32);
 document.getElementById('resetBtn').addEventListener('click', resetBracket);
 
 // ============================================================
