@@ -785,7 +785,7 @@
       <div class="trophy-zone">
         <div class="trophy-icon">🏆</div>
         <div class="final-label">FINAL</div>
-        <div class="final-meta">19/07 · NY/NJ</div>
+        <div class="final-meta">19/07 · 17h00</div>
         <div id="finalMatch"></div>
         <div class="champion-banner" id="championBanner">
           <div class="champ-flag" id="champFlag"></div>
@@ -907,57 +907,561 @@ Object.keys(TEAMS).forEach(g => {
 // Round of 32 matchups: 16 matches
 // Format: { id, date, city, slotA: { type:'group', group, rank }, slotB: { type:'group3rd', groups } }
 // ============================================================
+// ============================================================
+// FIFA ANNEX C — official mapping of the 495 third-place scenarios.
+// Key: the 8 qualifying group letters, sorted alphabetically.
+// Value: 8 chars = 3rd-placed group facing winners A,B,D,E,G,I,K,L (in that order).
+// Source: FIFA World Cup 2026 Competition Regulations, Annex C (pages 80-97).
+// ============================================================
+const ANNEX_C = {
+  "ABCDEFGH":"HGBCAFDE",
+  "ABCDEFGI":"CGBDAFEI",
+  "ABCDEFGJ":"CGBDAFEJ",
+  "ABCDEFGK":"CGBDAFEK",
+  "ABCDEFGL":"CGBDAFLE",
+  "ABCDEFHI":"HEBCAFDI",
+  "ABCDEFHJ":"HJBCAFDE",
+  "ABCDEFHK":"HEBCAFDK",
+  "ABCDEFHL":"HFBCADLE",
+  "ABCDEFIJ":"CJBDAFEI",
+  "ABCDEFIK":"CEBDAFIK",
+  "ABCDEFIL":"CEBDAFLI",
+  "ABCDEFJK":"CJBDAFEK",
+  "ABCDEFJL":"CJBDAFLE",
+  "ABCDEFKL":"CEBDAFLK",
+  "ABCDEGHI":"HGBCADEI",
+  "ABCDEGHJ":"HGBCADEJ",
+  "ABCDEGHK":"HGBCADEK",
+  "ABCDEGHL":"HGBCADLE",
+  "ABCDEGIJ":"EGBCADIJ",
+  "ABCDEGIK":"EGBCADIK",
+  "ABCDEGIL":"EGBCADLI",
+  "ABCDEGJK":"EGBCADJK",
+  "ABCDEGJL":"EGBCADLJ",
+  "ABCDEGKL":"EGBCADLK",
+  "ABCDEHIJ":"HJBCADEI",
+  "ABCDEHIK":"HEBCADIK",
+  "ABCDEHIL":"HEBCADLI",
+  "ABCDEHJK":"HJBCADEK",
+  "ABCDEHJL":"HJBCADLE",
+  "ABCDEHKL":"HEBCADLK",
+  "ABCDEIJK":"EJBCADIK",
+  "ABCDEIJL":"EJBCADLI",
+  "ABCDEIKL":"EIBCADLK",
+  "ABCDEJKL":"EJBCADLK",
+  "ABCDFGHI":"HGBCAFDI",
+  "ABCDFGHJ":"HGBCAFDJ",
+  "ABCDFGHK":"HGBCAFDK",
+  "ABCDFGHL":"CGBDAFLH",
+  "ABCDFGIJ":"CGBDAFIJ",
+  "ABCDFGIK":"CGBDAFIK",
+  "ABCDFGIL":"CGBDAFLI",
+  "ABCDFGJK":"CGBDAFJK",
+  "ABCDFGJL":"CGBDAFLJ",
+  "ABCDFGKL":"CGBDAFLK",
+  "ABCDFHIJ":"HJBCAFDI",
+  "ABCDFHIK":"HFBCADIK",
+  "ABCDFHIL":"HFBCADLI",
+  "ABCDFHJK":"HJBCAFDK",
+  "ABCDFHJL":"CJBDAFLH",
+  "ABCDFHKL":"HFBCADLK",
+  "ABCDFIJK":"CJBDAFIK",
+  "ABCDFIJL":"CJBDAFLI",
+  "ABCDFIKL":"CIBDAFLK",
+  "ABCDFJKL":"CJBDAFLK",
+  "ABCDGHIJ":"HGBCADIJ",
+  "ABCDGHIK":"HGBCADIK",
+  "ABCDGHIL":"HGBCADLI",
+  "ABCDGHJK":"HGBCADJK",
+  "ABCDGHJL":"HGBCADLJ",
+  "ABCDGHKL":"HGBCADLK",
+  "ABCDGIJK":"CJBDAGIK",
+  "ABCDGIJL":"CJBDAGLI",
+  "ABCDGIKL":"IGBCADLK",
+  "ABCDGJKL":"CJBDAGLK",
+  "ABCDHIJK":"HJBCADIK",
+  "ABCDHIJL":"HJBCADLI",
+  "ABCDHIKL":"HIBCADLK",
+  "ABCDHJKL":"HJBCADLK",
+  "ABCDIJKL":"IJBCADLK",
+  "ABCEFGHI":"HGBCAFEI",
+  "ABCEFGHJ":"HGBCAFEJ",
+  "ABCEFGHK":"HGBCAFEK",
+  "ABCEFGHL":"HGBCAFLE",
+  "ABCEFGIJ":"EGBCAFIJ",
+  "ABCEFGIK":"EGBCAFIK",
+  "ABCEFGIL":"EGBCAFLI",
+  "ABCEFGJK":"EGBCAFJK",
+  "ABCEFGJL":"EGBCAFLJ",
+  "ABCEFGKL":"EGBCAFLK",
+  "ABCEFHIJ":"HJBCAFEI",
+  "ABCEFHIK":"HEBCAFIK",
+  "ABCEFHIL":"HEBCAFLI",
+  "ABCEFHJK":"HJBCAFEK",
+  "ABCEFHJL":"HJBCAFLE",
+  "ABCEFHKL":"HEBCAFLK",
+  "ABCEFIJK":"EJBCAFIK",
+  "ABCEFIJL":"EJBCAFLI",
+  "ABCEFIKL":"EIBCAFLK",
+  "ABCEFJKL":"EJBCAFLK",
+  "ABCEGHIJ":"HJBCAGEI",
+  "ABCEGHIK":"EGBCAHIK",
+  "ABCEGHIL":"EGBCAHLI",
+  "ABCEGHJK":"HJBCAGEK",
+  "ABCEGHJL":"HJBCAGLE",
+  "ABCEGHKL":"EGBCAHLK",
+  "ABCEGIJK":"EJBCAGIK",
+  "ABCEGIJL":"EJBCAGLI",
+  "ABCEGIKL":"EGBAICLK",
+  "ABCEGJKL":"EJBCAGLK",
+  "ABCEHIJK":"EJBCAHIK",
+  "ABCEHIJL":"EJBCAHLI",
+  "ABCEHIKL":"EIBCAHLK",
+  "ABCEHJKL":"EJBCAHLK",
+  "ABCEIJKL":"EJBAICLK",
+  "ABCFGHIJ":"HGBCAFIJ",
+  "ABCFGHIK":"HGBCAFIK",
+  "ABCFGHIL":"HGBCAFLI",
+  "ABCFGHJK":"HGBCAFJK",
+  "ABCFGHJL":"HGBCAFLJ",
+  "ABCFGHKL":"HGBCAFLK",
+  "ABCFGIJK":"CJBFAGIK",
+  "ABCFGIJL":"CJBFAGLI",
+  "ABCFGIKL":"IGBCAFLK",
+  "ABCFGJKL":"CJBFAGLK",
+  "ABCFHIJK":"HJBCAFIK",
+  "ABCFHIJL":"HJBCAFLI",
+  "ABCFHIKL":"HIBCAFLK",
+  "ABCFHJKL":"HJBCAFLK",
+  "ABCFIJKL":"IJBCAFLK",
+  "ABCGHIJK":"HJBCAGIK",
+  "ABCGHIJL":"HJBCAGLI",
+  "ABCGHIKL":"IGBCAHLK",
+  "ABCGHJKL":"HJBCAGLK",
+  "ABCGIJKL":"IJBCAGLK",
+  "ABCHIJKL":"IJBCAHLK",
+  "ABDEFGHI":"HGBDAFEI",
+  "ABDEFGHJ":"HGBDAFEJ",
+  "ABDEFGHK":"HGBDAFEK",
+  "ABDEFGHL":"HGBDAFLE",
+  "ABDEFGIJ":"EGBDAFIJ",
+  "ABDEFGIK":"EGBDAFIK",
+  "ABDEFGIL":"EGBDAFLI",
+  "ABDEFGJK":"EGBDAFJK",
+  "ABDEFGJL":"EGBDAFLJ",
+  "ABDEFGKL":"EGBDAFLK",
+  "ABDEFHIJ":"HJBDAFEI",
+  "ABDEFHIK":"HEBDAFIK",
+  "ABDEFHIL":"HEBDAFLI",
+  "ABDEFHJK":"HJBDAFEK",
+  "ABDEFHJL":"HJBDAFLE",
+  "ABDEFHKL":"HEBDAFLK",
+  "ABDEFIJK":"EJBDAFIK",
+  "ABDEFIJL":"EJBDAFLI",
+  "ABDEFIKL":"EIBDAFLK",
+  "ABDEFJKL":"EJBDAFLK",
+  "ABDEGHIJ":"HJBDAGEI",
+  "ABDEGHIK":"EGBDAHIK",
+  "ABDEGHIL":"EGBDAHLI",
+  "ABDEGHJK":"HJBDAGEK",
+  "ABDEGHJL":"HJBDAGLE",
+  "ABDEGHKL":"EGBDAHLK",
+  "ABDEGIJK":"EJBDAGIK",
+  "ABDEGIJL":"EJBDAGLI",
+  "ABDEGIKL":"EGBAIDLK",
+  "ABDEGJKL":"EJBDAGLK",
+  "ABDEHIJK":"EJBDAHIK",
+  "ABDEHIJL":"EJBDAHLI",
+  "ABDEHIKL":"EIBDAHLK",
+  "ABDEHJKL":"EJBDAHLK",
+  "ABDEIJKL":"EJBAIDLK",
+  "ABDFGHIJ":"HGBDAFIJ",
+  "ABDFGHIK":"HGBDAFIK",
+  "ABDFGHIL":"HGBDAFLI",
+  "ABDFGHJK":"HGBDAFJK",
+  "ABDFGHJL":"HGBDAFLJ",
+  "ABDFGHKL":"HGBDAFLK",
+  "ABDFGIJK":"FJBDAGIK",
+  "ABDFGIJL":"FJBDAGLI",
+  "ABDFGIKL":"IGBDAFLK",
+  "ABDFGJKL":"FJBDAGLK",
+  "ABDFHIJK":"HJBDAFIK",
+  "ABDFHIJL":"HJBDAFLI",
+  "ABDFHIKL":"HIBDAFLK",
+  "ABDFHJKL":"HJBDAFLK",
+  "ABDFIJKL":"IJBDAFLK",
+  "ABDGHIJK":"HJBDAGIK",
+  "ABDGHIJL":"HJBDAGLI",
+  "ABDGHIKL":"IGBDAHLK",
+  "ABDGHJKL":"HJBDAGLK",
+  "ABDGIJKL":"IJBDAGLK",
+  "ABDHIJKL":"IJBDAHLK",
+  "ABEFGHIJ":"HJBFAGEI",
+  "ABEFGHIK":"EGBFAHIK",
+  "ABEFGHIL":"EGBFAHLI",
+  "ABEFGHJK":"HJBFAGEK",
+  "ABEFGHJL":"HJBFAGLE",
+  "ABEFGHKL":"EGBFAHLK",
+  "ABEFGIJK":"EJBFAGIK",
+  "ABEFGIJL":"EJBFAGLI",
+  "ABEFGIKL":"EGBAIFLK",
+  "ABEFGJKL":"EJBFAGLK",
+  "ABEFHIJK":"EJBFAHIK",
+  "ABEFHIJL":"EJBFAHLI",
+  "ABEFHIKL":"EIBFAHLK",
+  "ABEFHJKL":"EJBFAHLK",
+  "ABEFIJKL":"EJBAIFLK",
+  "ABEGHIJK":"EJBAHGIK",
+  "ABEGHIJL":"EJBAHGLI",
+  "ABEGHIKL":"EGBAIHLK",
+  "ABEGHJKL":"EJBAHGLK",
+  "ABEGIJKL":"EJBAIGLK",
+  "ABEHIJKL":"EJBAIHLK",
+  "ABFGHIJK":"HJBFAGIK",
+  "ABFGHIJL":"HJBFAGLI",
+  "ABFGHIKL":"HGBAIFLK",
+  "ABFGHJKL":"HJBFAGLK",
+  "ABFGIJKL":"IJBFAGLK",
+  "ABFHIJKL":"HJBAIFLK",
+  "ABGHIJKL":"HJBAIGLK",
+  "ACDEFGHI":"HGECAFDI",
+  "ACDEFGHJ":"HGJCAFDE",
+  "ACDEFGHK":"HGECAFDK",
+  "ACDEFGHL":"HGFCADLE",
+  "ACDEFGIJ":"CGJDAFEI",
+  "ACDEFGIK":"CGEDAFIK",
+  "ACDEFGIL":"CGEDAFLI",
+  "ACDEFGJK":"CGJDAFEK",
+  "ACDEFGJL":"CGJDAFLE",
+  "ACDEFGKL":"CGEDAFLK",
+  "ACDEFHIJ":"HJECAFDI",
+  "ACDEFHIK":"HEFCADIK",
+  "ACDEFHIL":"HEFCADLI",
+  "ACDEFHJK":"HJECAFDK",
+  "ACDEFHJL":"HJFCADLE",
+  "ACDEFHKL":"HEFCADLK",
+  "ACDEFIJK":"CJEDAFIK",
+  "ACDEFIJL":"CJEDAFLI",
+  "ACDEFIKL":"CEIDAFLK",
+  "ACDEFJKL":"CJEDAFLK",
+  "ACDEGHIJ":"HGJCADEI",
+  "ACDEGHIK":"HGECADIK",
+  "ACDEGHIL":"HGECADLI",
+  "ACDEGHJK":"HGJCADEK",
+  "ACDEGHJL":"HGJCADLE",
+  "ACDEGHKL":"HGECADLK",
+  "ACDEGIJK":"EGJCADIK",
+  "ACDEGIJL":"EGJCADLI",
+  "ACDEGIKL":"EGICADLK",
+  "ACDEGJKL":"EGJCADLK",
+  "ACDEHIJK":"HJECADIK",
+  "ACDEHIJL":"HJECADLI",
+  "ACDEHIKL":"HEICADLK",
+  "ACDEHJKL":"HJECADLK",
+  "ACDEIJKL":"EJICADLK",
+  "ACDFGHIJ":"HGJCAFDI",
+  "ACDFGHIK":"HGFCADIK",
+  "ACDFGHIL":"HGFCADLI",
+  "ACDFGHJK":"HGJCAFDK",
+  "ACDFGHJL":"CGJDAFLH",
+  "ACDFGHKL":"HGFCADLK",
+  "ACDFGIJK":"CGJDAFIK",
+  "ACDFGIJL":"CGJDAFLI",
+  "ACDFGIKL":"CGIDAFLK",
+  "ACDFGJKL":"CGJDAFLK",
+  "ACDFHIJK":"HJFCADIK",
+  "ACDFHIJL":"HJFCADLI",
+  "ACDFHIKL":"HFICADLK",
+  "ACDFHJKL":"HJFCADLK",
+  "ACDFIJKL":"CJIDAFLK",
+  "ACDGHIJK":"HGJCADIK",
+  "ACDGHIJL":"HGJCADLI",
+  "ACDGHIKL":"HGICADLK",
+  "ACDGHJKL":"HGJCADLK",
+  "ACDGIJKL":"IGJCADLK",
+  "ACDHIJKL":"HJICADLK",
+  "ACEFGHIJ":"HGJCAFEI",
+  "ACEFGHIK":"HGECAFIK",
+  "ACEFGHIL":"HGECAFLI",
+  "ACEFGHJK":"HGJCAFEK",
+  "ACEFGHJL":"HGJCAFLE",
+  "ACEFGHKL":"HGECAFLK",
+  "ACEFGIJK":"EGJCAFIK",
+  "ACEFGIJL":"EGJCAFLI",
+  "ACEFGIKL":"EGICAFLK",
+  "ACEFGJKL":"EGJCAFLK",
+  "ACEFHIJK":"HJECAFIK",
+  "ACEFHIJL":"HJECAFLI",
+  "ACEFHIKL":"HEICAFLK",
+  "ACEFHJKL":"HJECAFLK",
+  "ACEFIJKL":"EJICAFLK",
+  "ACEGHIJK":"EGJCAHIK",
+  "ACEGHIJL":"EGJCAHLI",
+  "ACEGHIKL":"EGICAHLK",
+  "ACEGHJKL":"EGJCAHLK",
+  "ACEGIJKL":"EJICAGLK",
+  "ACEHIJKL":"EJICAHLK",
+  "ACFGHIJK":"HGJCAFIK",
+  "ACFGHIJL":"HGJCAFLI",
+  "ACFGHIKL":"HGICAFLK",
+  "ACFGHJKL":"HGJCAFLK",
+  "ACFGIJKL":"IGJCAFLK",
+  "ACFHIJKL":"HJICAFLK",
+  "ACGHIJKL":"HJICAGLK",
+  "ADEFGHIJ":"HGJDAFEI",
+  "ADEFGHIK":"HGEDAFIK",
+  "ADEFGHIL":"HGEDAFLI",
+  "ADEFGHJK":"HGJDAFEK",
+  "ADEFGHJL":"HGJDAFLE",
+  "ADEFGHKL":"HGEDAFLK",
+  "ADEFGIJK":"EGJDAFIK",
+  "ADEFGIJL":"EGJDAFLI",
+  "ADEFGIKL":"EGIDAFLK",
+  "ADEFGJKL":"EGJDAFLK",
+  "ADEFHIJK":"HJEDAFIK",
+  "ADEFHIJL":"HJEDAFLI",
+  "ADEFHIKL":"HEIDAFLK",
+  "ADEFHJKL":"HJEDAFLK",
+  "ADEFIJKL":"EJIDAFLK",
+  "ADEGHIJK":"EGJDAHIK",
+  "ADEGHIJL":"EGJDAHLI",
+  "ADEGHIKL":"EGIDAHLK",
+  "ADEGHJKL":"EGJDAHLK",
+  "ADEGIJKL":"EJIDAGLK",
+  "ADEHIJKL":"EJIDAHLK",
+  "ADFGHIJK":"HGJDAFIK",
+  "ADFGHIJL":"HGJDAFLI",
+  "ADFGHIKL":"HGIDAFLK",
+  "ADFGHJKL":"HGJDAFLK",
+  "ADFGIJKL":"IGJDAFLK",
+  "ADFHIJKL":"HJIDAFLK",
+  "ADGHIJKL":"HJIDAGLK",
+  "AEFGHIJK":"EGJFAHIK",
+  "AEFGHIJL":"EGJFAHLI",
+  "AEFGHIKL":"EGIFAHLK",
+  "AEFGHJKL":"EGJFAHLK",
+  "AEFGIJKL":"EJIFAGLK",
+  "AEFHIJKL":"EJIFAHLK",
+  "AEGHIJKL":"EJIAHGLK",
+  "AFGHIJKL":"HJIFAGLK",
+  "BCDEFGHI":"CGBDHFEI",
+  "BCDEFGHJ":"HGBCJFDE",
+  "BCDEFGHK":"CGBDHFEK",
+  "BCDEFGHL":"CGBDHFLE",
+  "BCDEFGIJ":"CGBDJFEI",
+  "BCDEFGIK":"CGBDEFIK",
+  "BCDEFGIL":"CGBDEFLI",
+  "BCDEFGJK":"CGBDJFEK",
+  "BCDEFGJL":"CGBDJFLE",
+  "BCDEFGKL":"CGBDEFLK",
+  "BCDEFHIJ":"CJBDHFEI",
+  "BCDEFHIK":"CEBDHFIK",
+  "BCDEFHIL":"CEBDHFLI",
+  "BCDEFHJK":"CJBDHFEK",
+  "BCDEFHJL":"CJBDHFLE",
+  "BCDEFHKL":"CEBDHFLK",
+  "BCDEFIJK":"CJBDEFIK",
+  "BCDEFIJL":"CJBDEFLI",
+  "BCDEFIKL":"CEBDIFLK",
+  "BCDEFJKL":"CJBDEFLK",
+  "BCDEGHIJ":"HGBCJDEI",
+  "BCDEGHIK":"EGBCHDIK",
+  "BCDEGHIL":"EGBCHDLI",
+  "BCDEGHJK":"HGBCJDEK",
+  "BCDEGHJL":"HGBCJDLE",
+  "BCDEGHKL":"EGBCHDLK",
+  "BCDEGIJK":"EGBCJDIK",
+  "BCDEGIJL":"EGBCJDLI",
+  "BCDEGIKL":"EGBCIDLK",
+  "BCDEGJKL":"EGBCJDLK",
+  "BCDEHIJK":"EJBCHDIK",
+  "BCDEHIJL":"EJBCHDLI",
+  "BCDEHIKL":"EIBCHDLK",
+  "BCDEHJKL":"EJBCHDLK",
+  "BCDEIJKL":"EJBCIDLK",
+  "BCDFGHIJ":"HGBCJFDI",
+  "BCDFGHIK":"CGBDHFIK",
+  "BCDFGHIL":"CGBDHFLI",
+  "BCDFGHJK":"HGBCJFDK",
+  "BCDFGHJL":"CGBDHFLJ",
+  "BCDFGHKL":"CGBDHFLK",
+  "BCDFGIJK":"CGBDJFIK",
+  "BCDFGIJL":"CGBDJFLI",
+  "BCDFGIKL":"CGBDIFLK",
+  "BCDFGJKL":"CGBDJFLK",
+  "BCDFHIJK":"CJBDHFIK",
+  "BCDFHIJL":"CJBDHFLI",
+  "BCDFHIKL":"CIBDHFLK",
+  "BCDFHJKL":"CJBDHFLK",
+  "BCDFIJKL":"CJBDIFLK",
+  "BCDGHIJK":"HGBCJDIK",
+  "BCDGHIJL":"HGBCJDLI",
+  "BCDGHIKL":"HGBCIDLK",
+  "BCDGHJKL":"HGBCJDLK",
+  "BCDGIJKL":"IGBCJDLK",
+  "BCDHIJKL":"HJBCIDLK",
+  "BCEFGHIJ":"HGBCJFEI",
+  "BCEFGHIK":"EGBCHFIK",
+  "BCEFGHIL":"EGBCHFLI",
+  "BCEFGHJK":"HGBCJFEK",
+  "BCEFGHJL":"HGBCJFLE",
+  "BCEFGHKL":"EGBCHFLK",
+  "BCEFGIJK":"EGBCJFIK",
+  "BCEFGIJL":"EGBCJFLI",
+  "BCEFGIKL":"EGBCIFLK",
+  "BCEFGJKL":"EGBCJFLK",
+  "BCEFHIJK":"EJBCHFIK",
+  "BCEFHIJL":"EJBCHFLI",
+  "BCEFHIKL":"EIBCHFLK",
+  "BCEFHJKL":"EJBCHFLK",
+  "BCEFIJKL":"EJBCIFLK",
+  "BCEGHIJK":"EJBCHGIK",
+  "BCEGHIJL":"EJBCHGLI",
+  "BCEGHIKL":"EGBCIHLK",
+  "BCEGHJKL":"EJBCHGLK",
+  "BCEGIJKL":"EJBCIGLK",
+  "BCEHIJKL":"EJBCIHLK",
+  "BCFGHIJK":"HGBCJFIK",
+  "BCFGHIJL":"HGBCJFLI",
+  "BCFGHIKL":"HGBCIFLK",
+  "BCFGHJKL":"HGBCJFLK",
+  "BCFGIJKL":"IGBCJFLK",
+  "BCFHIJKL":"HJBCIFLK",
+  "BCGHIJKL":"HJBCIGLK",
+  "BDEFGHIJ":"HGBDJFEI",
+  "BDEFGHIK":"EGBDHFIK",
+  "BDEFGHIL":"EGBDHFLI",
+  "BDEFGHJK":"HGBDJFEK",
+  "BDEFGHJL":"HGBDJFLE",
+  "BDEFGHKL":"EGBDHFLK",
+  "BDEFGIJK":"EGBDJFIK",
+  "BDEFGIJL":"EGBDJFLI",
+  "BDEFGIKL":"EGBDIFLK",
+  "BDEFGJKL":"EGBDJFLK",
+  "BDEFHIJK":"EJBDHFIK",
+  "BDEFHIJL":"EJBDHFLI",
+  "BDEFHIKL":"EIBDHFLK",
+  "BDEFHJKL":"EJBDHFLK",
+  "BDEFIJKL":"EJBDIFLK",
+  "BDEGHIJK":"EJBDHGIK",
+  "BDEGHIJL":"EJBDHGLI",
+  "BDEGHIKL":"EGBDIHLK",
+  "BDEGHJKL":"EJBDHGLK",
+  "BDEGIJKL":"EJBDIGLK",
+  "BDEHIJKL":"EJBDIHLK",
+  "BDFGHIJK":"HGBDJFIK",
+  "BDFGHIJL":"HGBDJFLI",
+  "BDFGHIKL":"HGBDIFLK",
+  "BDFGHJKL":"HGBDJFLK",
+  "BDFGIJKL":"IGBDJFLK",
+  "BDFHIJKL":"HJBDIFLK",
+  "BDGHIJKL":"HJBDIGLK",
+  "BEFGHIJK":"EJBFHGIK",
+  "BEFGHIJL":"EJBFHGLI",
+  "BEFGHIKL":"EGBFIHLK",
+  "BEFGHJKL":"EJBFHGLK",
+  "BEFGIJKL":"EJBFIGLK",
+  "BEFHIJKL":"EJBFIHLK",
+  "BEGHIJKL":"EJIBHGLK",
+  "BFGHIJKL":"HJBFIGLK",
+  "CDEFGHIJ":"CGJDHFEI",
+  "CDEFGHIK":"CGEDHFIK",
+  "CDEFGHIL":"CGEDHFLI",
+  "CDEFGHJK":"CGJDHFEK",
+  "CDEFGHJL":"CGJDHFLE",
+  "CDEFGHKL":"CGEDHFLK",
+  "CDEFGIJK":"CGEDJFIK",
+  "CDEFGIJL":"CGEDJFLI",
+  "CDEFGIKL":"CGEDIFLK",
+  "CDEFGJKL":"CGEDJFLK",
+  "CDEFHIJK":"CJEDHFIK",
+  "CDEFHIJL":"CJEDHFLI",
+  "CDEFHIKL":"CEIDHFLK",
+  "CDEFHJKL":"CJEDHFLK",
+  "CDEFIJKL":"CJEDIFLK",
+  "CDEGHIJK":"EGJCHDIK",
+  "CDEGHIJL":"EGJCHDLI",
+  "CDEGHIKL":"EGICHDLK",
+  "CDEGHJKL":"EGJCHDLK",
+  "CDEGIJKL":"EGICJDLK",
+  "CDEHIJKL":"EJICHDLK",
+  "CDFGHIJK":"CGJDHFIK",
+  "CDFGHIJL":"CGJDHFLI",
+  "CDFGHIKL":"CGIDHFLK",
+  "CDFGHJKL":"CGJDHFLK",
+  "CDFGIJKL":"CGIDJFLK",
+  "CDFHIJKL":"CJIDHFLK",
+  "CDGHIJKL":"HGICJDLK",
+  "CEFGHIJK":"EGJCHFIK",
+  "CEFGHIJL":"EGJCHFLI",
+  "CEFGHIKL":"EGICHFLK",
+  "CEFGHJKL":"EGJCHFLK",
+  "CEFGIJKL":"EGICJFLK",
+  "CEFHIJKL":"EJICHFLK",
+  "CEGHIJKL":"EJICHGLK",
+  "CFGHIJKL":"HGICJFLK",
+  "DEFGHIJK":"EGJDHFIK",
+  "DEFGHIJL":"EGJDHFLI",
+  "DEFGHIKL":"EGIDHFLK",
+  "DEFGHJKL":"EGJDHFLK",
+  "DEFGIJKL":"EGIDJFLK",
+  "DEFHIJKL":"EJIDHFLK",
+  "DEGHIJKL":"EJIDHGLK",
+  "DFGHIJKL":"HGIDJFLK",
+  "EFGHIJKL":"EJIFHGLK"
+};
+
 const R32_LEFT = [
-  { id: 'L1', date: '06/29', city: 'Boston', a: { type:'group', group:'E', rank:1 }, b: { type:'g3', groups:['A','B','C','D','F'] } },
-  { id: 'L2', date: '06/30', city: 'NY',     a: { type:'group', group:'I', rank:1 }, b: { type:'g3', groups:['C','D','F','G','H'] } },
-  { id: 'L3', date: '06/28', city: 'LA',     a: { type:'group', group:'A', rank:2 }, b: { type:'group', group:'B', rank:2 } },
-  { id: 'L4', date: '06/29', city: 'Mty',    a: { type:'group', group:'F', rank:1 }, b: { type:'group', group:'C', rank:2 } },
-  { id: 'L5', date: '07/02', city: 'Toronto',a: { type:'group', group:'K', rank:2 }, b: { type:'group', group:'L', rank:2 } },
-  { id: 'L6', date: '07/02', city: 'LA',     a: { type:'group', group:'H', rank:1 }, b: { type:'group', group:'J', rank:2 } },
-  { id: 'L7', date: '07/03', city: 'SF Bay', a: { type:'group', group:'D', rank:1 }, b: { type:'g3', groups:['B','E','F','I','J'] } },
-  { id: 'L8', date: '07/01', city: 'Seattle',a: { type:'group', group:'G', rank:1 }, b: { type:'g3', groups:['A','E','H','I','J'] } }
+  { id: 'L1', date: '29/06', time: '19h30', city: 'Boston', a: { type:'group', group:'E', rank:1 }, b: { type:'g3', groups:['A','B','C','D','F'] } },
+  { id: 'L2', date: '30/06', time: '19h00', city: 'NY',     a: { type:'group', group:'I', rank:1 }, b: { type:'g3', groups:['C','D','F','G','H'] } },
+  { id: 'L3', date: '28/06', time: '20h00', city: 'LA',     a: { type:'group', group:'A', rank:2 }, b: { type:'group', group:'B', rank:2 } },
+  { id: 'L4', date: '30/06', time: '00h00', city: 'Mty',    a: { type:'group', group:'F', rank:1 }, b: { type:'group', group:'C', rank:2 } },
+  { id: 'L5', date: '02/07', time: '21h00', city: 'Toronto',a: { type:'group', group:'K', rank:2 }, b: { type:'group', group:'L', rank:2 } },
+  { id: 'L6', date: '02/07', time: '20h00', city: 'LA',     a: { type:'group', group:'H', rank:1 }, b: { type:'group', group:'J', rank:2 } },
+  { id: 'L7', date: '02/07', time: '01h00', city: 'SF Bay', a: { type:'group', group:'D', rank:1 }, b: { type:'g3', groups:['B','E','F','I','J'] } },
+  { id: 'L8', date: '01/07', time: '21h00', city: 'Seattle',a: { type:'group', group:'G', rank:1 }, b: { type:'g3', groups:['A','E','H','I','J'] } }
 ];
 const R32_RIGHT = [
-  { id: 'R1', date: '06/29', city: 'Houston', a: { type:'group', group:'C', rank:1 }, b: { type:'group', group:'F', rank:2 } },
-  { id: 'R2', date: '06/30', city: 'Dallas',  a: { type:'group', group:'E', rank:2 }, b: { type:'group', group:'I', rank:2 } },
-  { id: 'R3', date: '06/30', city: 'CDMX',    a: { type:'group', group:'A', rank:1 }, b: { type:'g3', groups:['G','E','F','H','I'] } },
-  { id: 'R4', date: '07/01', city: 'Atlanta', a: { type:'group', group:'L', rank:1 }, b: { type:'g3', groups:['E','H','I','J','K'] } },
-  { id: 'R5', date: '07/03', city: 'Miami',   a: { type:'group', group:'J', rank:1 }, b: { type:'group', group:'H', rank:2 } },
-  { id: 'R6', date: '07/03', city: 'Dallas',  a: { type:'group', group:'D', rank:2 }, b: { type:'group', group:'G', rank:2 } },
-  { id: 'R7', date: '07/02', city: 'Vancou.', a: { type:'group', group:'B', rank:1 }, b: { type:'g3', groups:['E','F','G','I','J'] } },
-  { id: 'R8', date: '07/02', city: 'Kansas',  a: { type:'group', group:'K', rank:1 }, b: { type:'g3', groups:['E','H','I','J','K'] } }
+  { id: 'R1', date: '29/06', time: '16h00', city: 'Houston', a: { type:'group', group:'C', rank:1 }, b: { type:'group', group:'F', rank:2 } },
+  { id: 'R2', date: '30/06', time: '16h00', city: 'Dallas',  a: { type:'group', group:'E', rank:2 }, b: { type:'group', group:'I', rank:2 } },
+  { id: 'R3', date: '01/07', time: '00h00', city: 'CDMX',    a: { type:'group', group:'A', rank:1 }, b: { type:'g3', groups:['C','E','F','H','I'] } },
+  { id: 'R4', date: '01/07', time: '14h00', city: 'Atlanta', a: { type:'group', group:'L', rank:1 }, b: { type:'g3', groups:['E','H','I','J','K'] } },
+  { id: 'R5', date: '03/07', time: '20h00', city: 'Miami',   a: { type:'group', group:'J', rank:1 }, b: { type:'group', group:'H', rank:2 } },
+  { id: 'R6', date: '03/07', time: '18h00', city: 'Dallas',  a: { type:'group', group:'D', rank:2 }, b: { type:'group', group:'G', rank:2 } },
+  { id: 'R7', date: '03/07', time: '04h00', city: 'Vancou.', a: { type:'group', group:'B', rank:1 }, b: { type:'g3', groups:['E','F','G','I','J'] } },
+  { id: 'R8', date: '04/07', time: '00h30', city: 'Kansas',  a: { type:'group', group:'K', rank:1 }, b: { type:'g3', groups:['D','E','I','J','L'] } }
 ];
 
 // Round of 16: pairs from R32
 const R16_LEFT = [
-  { id: 'L9',  date: '07/04', city: 'Philadel', from: ['L1','L2'] },
-  { id: 'L10', date: '07/04', city: 'Houston',  from: ['L3','L4'] },
-  { id: 'L11', date: '07/06', city: 'Dallas',   from: ['L5','L6'] },
-  { id: 'L12', date: '07/06', city: 'Seattle',  from: ['L7','L8'] }
+  { id: 'L9',  date: '04/07', time: '19h00', city: 'Philadel', from: ['L1','L2'] },
+  { id: 'L10', date: '04/07', time: '16h00', city: 'Houston',  from: ['L3','L4'] },
+  { id: 'L11', date: '06/07', time: '18h00', city: 'Dallas',   from: ['L5','L6'] },
+  { id: 'L12', date: '07/07', time: '01h00', city: 'Seattle',  from: ['L7','L8'] }
 ];
 const R16_RIGHT = [
-  { id: 'R9',  date: '07/05', city: 'NY',      from: ['R1','R2'] },
-  { id: 'R10', date: '07/05', city: 'CDMX',    from: ['R3','R4'] },
-  { id: 'R11', date: '07/07', city: 'Atlanta', from: ['R5','R6'] },
-  { id: 'R12', date: '07/07', city: 'Vancou.', from: ['R7','R8'] }
+  { id: 'R9',  date: '05/07', time: '18h00', city: 'NY',      from: ['R1','R2'] },
+  { id: 'R10', date: '05/07', time: '23h00', city: 'CDMX',    from: ['R3','R4'] },
+  { id: 'R11', date: '07/07', time: '14h00', city: 'Atlanta', from: ['R5','R6'] },
+  { id: 'R12', date: '07/07', time: '21h00', city: 'Vancou.', from: ['R7','R8'] }
 ];
 
 // Quarter Finals
 const QF_LEFT = [
-  { id: 'L13', date: '07/09', city: 'Boston', from: ['L9','L10'] },
-  { id: 'L14', date: '07/10', city: 'LA',     from: ['L11','L12'] }
+  { id: 'L13', date: '09/07', time: '18h00', city: 'Boston', from: ['L9','L10'] },
+  { id: 'L14', date: '10/07', time: '20h00', city: 'LA',     from: ['L11','L12'] }
 ];
 const QF_RIGHT = [
-  { id: 'R13', date: '07/11', city: 'Miami',  from: ['R9','R10'] },
-  { id: 'R14', date: '07/11', city: 'Kansas', from: ['R11','R12'] }
+  { id: 'R13', date: '11/07', time: '19h00', city: 'Miami',  from: ['R9','R10'] },
+  { id: 'R14', date: '12/07', time: '00h00', city: 'Kansas', from: ['R11','R12'] }
 ];
 
 // Semis
-const SF_LEFT  = [{ id: 'L15', date: '07/14', city: 'Dallas',  from: ['L13','L14'] }];
-const SF_RIGHT = [{ id: 'R15', date: '07/15', city: 'Atlanta', from: ['R13','R14'] }];
+const SF_LEFT  = [{ id: 'L15', date: '14/07', time: '18h00', city: 'Dallas',  from: ['L13','L14'] }];
+const SF_RIGHT = [{ id: 'R15', date: '15/07', time: '17h00', city: 'Atlanta', from: ['R13','R14'] }];
 
 // Final
-const FINAL = { id: 'F', date: '07/19', city: 'NY/NJ', from: ['L15','R15'] };
+const FINAL = { id: 'F', date: '19/07', time: '17h00', city: 'NY/NJ', from: ['L15','R15'] };
 
 // ============================================================
 // STATE
@@ -1373,15 +1877,15 @@ function matchHTML(m) {
   const winner = data.winner;
   const aCls = winner === 'a' ? 'winner' : (winner === 'b' ? 'loser' : '');
   const bCls = winner === 'b' ? 'winner' : (winner === 'a' ? 'loser' : '');
-  const codeA = m.a && m.a.type === 'group' ? `${m.a.rank}${m.a.group}` : (m.a && m.a.type === 'g3' ? `3º` : '');
-  const codeB = m.b && m.b.type === 'group' ? `${m.b.rank}${m.b.group}` : (m.b && m.b.type === 'g3' ? `3º` : '');
-  const metaCity = m.city ? `${m.date} · ${m.city}` : '';
+  const codeA = m.a && m.a.type === 'group' ? `${m.a.rank}${m.a.group}` : (m.a && m.a.type === 'g3' ? `3${m.a.groups.join('')}` : '');
+  const codeB = m.b && m.b.type === 'group' ? `${m.b.rank}${m.b.group}` : (m.b && m.b.type === 'g3' ? `3${m.b.groups.join('')}` : '');
+  const metaCity = m.time ? `${m.date} · ${m.time}` : '';
   // R32 matches have m.a/m.b spec (drag targets). Later rounds use m.from (auto-fed).
   const isR32 = !!(m.a && (m.a.type === 'group' || m.a.type === 'g3'));
   const slotKind = isR32 ? 'r32-slot' : 'auto-slot';
-  // Placeholder labels for empty slots
-  const labelA = codeA ? (m.a.type === 'g3' ? `3º (${m.a.groups.join('')})` : codeA) : 'TBD';
-  const labelB = codeB ? (m.b.type === 'g3' ? `3º (${m.b.groups.join('')})` : codeB) : 'TBD';
+  // Placeholder labels for empty slots — the code already contains the rank+groups
+  const labelA = codeA || 'TBD';
+  const labelB = codeB || 'TBD';
   return `
     <div class="match" data-match="${m.id}">
       ${metaCity ? `<div class="match-meta">${metaCity}</div>` : ''}
@@ -1716,9 +2220,10 @@ function fillFixedSlots() {
   });
 }
 
-// Fill the 8 "best 3rd-place" R32 slots using the user-ordered thirdsRanking.
-// Top 8 groups in the ranking are the qualifiers; positions 9-12 are eliminated.
-// Allocates them to compatible slots via backtracking (each slot only accepts certain groups).
+// Fill the 8 "best 3rd-place" R32 slots using the OFFICIAL FIFA Annex C table.
+// Top 8 groups in the user-ordered ranking are the qualifiers; positions 9-12 are out.
+// The Annex C lookup maps each exact set of 8 qualifying groups to the precise
+// winner→3rd pairing FIFA pre-determined (one of the 495 scenarios).
 function fillThirdPlaceSlots() {
   // 1) Snapshot previous third-place assignments so we can detect changes and clear
   //    downstream winners only for slots that actually changed.
@@ -1734,29 +2239,25 @@ function fillThirdPlaceSlots() {
   // 2) Qualifying groups = first 8 in the user-ordered ranking
   const qualifyingGroups = state.thirdsRanking.slice(0, 8);
 
-  // 3) Backtracking: assign each qualifying group to a compatible R32 slot.
-  //    Iterate slots in their natural (fixed) order so the same ranking always
-  //    produces the same R32 layout — fully deterministic, not random.
-  const assignment = {}; // matchId -> group letter
-  function backtrack(idx, usedGroups) {
-    if (idx === thirdSlots.length) return Object.keys(assignment).length === Math.min(8, qualifyingGroups.length);
-    const slot = thirdSlots[idx];
-    const eligible = slot.b.groups.filter(g => qualifyingGroups.includes(g) && !usedGroups.has(g));
-    for (const g of eligible) {
-      assignment[slot.id] = g;
-      usedGroups.add(g);
-      if (backtrack(idx + 1, usedGroups)) return true;
-      delete assignment[slot.id];
-      usedGroups.delete(g);
+  // 3) Look up the official Annex C scenario for this exact set of 8 groups.
+  //    Key = the 8 qualifying group letters sorted alphabetically.
+  //    Value = 8 chars giving the 3rd-placed group facing winners A,B,D,E,G,I,K,L (in that order).
+  const ANNEX_WINNERS = ['A','B','D','E','G','I','K','L'];
+  const assignment = {}; // matchId -> group letter of the 3rd-placed team
+  if (qualifyingGroups.length === 8) {
+    const key = [...qualifyingGroups].sort().join('');
+    const val = ANNEX_C[key];
+    if (val) {
+      // Map winner-group -> 3rd-group from the table
+      const winnerToThird = {};
+      ANNEX_WINNERS.forEach((w, i) => { winnerToThird[w] = val[i]; });
+      // Assign to each slot based on which group winner occupies it (m.a.group)
+      thirdSlots.forEach(slot => {
+        const winnerGroup = slot.a.group;
+        assignment[slot.id] = winnerToThird[winnerGroup] || null;
+      });
     }
-    // Allow empty assignment if not enough teams yet (e.g., during ranking edits)
-    if (qualifyingGroups.length < 8) {
-      delete assignment[slot.id];
-      if (backtrack(idx + 1, usedGroups)) return true;
-    }
-    return false;
   }
-  backtrack(0, new Set());
 
   // 4) Apply the assignment, clearing winners only where the team changed
   thirdSlots.forEach(slot => {
